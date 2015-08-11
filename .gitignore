@@ -3,4 +3,4 @@ src/*.so
 src/*.a
 src/data/*.o
 src/textglass_client
-src/nbproject
+nbproject
