@@ -4,8 +4,8 @@ LDFLAGS=
 LIBFLAGS=-lpthread
 RM=rm -f
 
-INCLUDES=data/tree.h data/queue.h data/list.h data/hashtable.h
-OBJS=data/hashtable.o data/list.o
+INCLUDES=textglass.h data/tree.h data/queue.h data/list.h data/hashtable.h
+OBJS=textglass_client.o data/hashtable.o data/list.o
 
 .PHONY: clean lib
 

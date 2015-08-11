@@ -1,48 +1,80 @@
-#include <stdio.h>
-
-#include "hashtable.h"
+#include "textglass.h"
 #include "list.h"
+
+static void printHelp()
+{
+	printf("Usage: textglass_client [OPTIONS] [STRING]\n");
+	printf("  -p <file>            load TextGlass pattern file (REQUIRED)\n");
+	printf("  -a <file>            load TextGlass attribute file\n");
+	printf("  -pp <file>           load TextGlass pattern patch file\n");
+	printf("  -ap <file>           load TextGlass attribute patch file\n");
+	printf("  -t <file>            load TextGlass test file\n");
+	printf("  -h                   print help\n");
+	printf("  STRING               test string\n");
+}
+
+static char *getParam(int argc, char **args, int pos)
+{
+	if(pos >= argc) {
+		return NULL;
+	} else if(args[pos][0] == '-' || !args[pos][0]) {
+		return NULL;
+	} else {
+		return args[pos];
+	}
+}
 
 int main(int argc, char **args)
 {
-	tg_hashtable *hashtable;
+	tg_list *tests;
+	char *pattern = NULL;
+	//char *attribute = NULL;
+	//char *patternPatch = NULL;
+	//char *attributePatch = NULL;
+	//char *testString = NULL;
+	int i, exit = 0;
 
-	printf("TextGlass\n");
+	printf("TextGlass C Client %s\n", TEXTGLASS_VERSION);
 
-	hashtable = tg_hashtable_init(2);
+	tests = tg_list_init();
 
-	tg_hashtable_set(hashtable, "1", "one");
-	tg_hashtable_set(hashtable, "2", "two");
-	tg_hashtable_set(hashtable, "3", "three");
-	tg_hashtable_set(hashtable, "4", "four");
+	//PARSE THE COMMAND LINE
 
-	printf("tg_hashtable: %s\n", (char*)tg_hashtable_get(hashtable, "1"));
-	printf("tg_hashtable: %s\n", (char*)tg_hashtable_get(hashtable, "2"));
-	printf("tg_hashtable: %s\n", (char*)tg_hashtable_get(hashtable, "3"));
-	printf("tg_hashtable: %s\n", (char*)tg_hashtable_get(hashtable, "4"));
-	
-	tg_hashtable_delete(hashtable, "3");
-
-	printf("tg_hashtable: %s\n", (char*)tg_hashtable_get(hashtable, "3"));
-
-	tg_hashtable_free(hashtable);
-
-	tg_list *list;
-	tg_list_item *item;
-
-	list = tg_list_init();
-
-	tg_list_add(list, "aaa");
-	tg_list_add(list, "bbb");
-	tg_list_add(list, "ccc");
-	tg_list_add(list, "ddd");
-
-	tg_list_foreach(list, item)
-	{
-		printf("tg_list: %s\n", (char*)item->value);
+	for(i = 1; i < argc; i++) {
+		if(!strcmp(args[i], "-h")) {
+			printHelp();
+			goto mdone;
+		} else if(!strcmp(args[i], "-p")) {
+			if(pattern) {
+				fprintf(stderr, "pattern file already defined\n");
+				exit = 1;
+				goto mdone;
+			}
+			if(!(pattern = getParam(argc, args, ++i)))
+			{
+				fprintf(stderr, "-p parameter missing\n");
+				exit = 1;
+				goto mdone;
+			}
+		} else {
+			printHelp();
+			fprintf(stderr, "\nunknown option: %s\n", args[i]);
+			exit = 1;
+			goto mdone;
+		}
 	}
 
-	tg_list_free(list);
-	
-	return 0;
+	if(!pattern) {
+		printHelp();
+		fprintf(stderr, "\npattern file required\n");
+		exit = 1;
+		goto mdone;
+	}
+
+	printf("Pattern file: %s\n", pattern);
+
+mdone:
+	tg_list_free(tests);
+
+	return exit;
 }
