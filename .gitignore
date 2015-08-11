@@ -1,6 +1,5 @@
-src/*.o
+*.o
 src/*.so
 src/*.a
-src/data/*.o
 src/textglass_client
 nbproject
