@@ -1,11 +1,11 @@
 CC=gcc
-CFLAGS=-O3 -Wall -fPIC -Idata
+CFLAGS=-O3 -Wall -fPIC -Idata -Ijsmn
 LDFLAGS=
 LIBFLAGS=-lpthread
 RM=rm -f
 
-INCLUDES=textglass.h data/tree.h data/queue.h data/list.h data/hashtable.h
-OBJS=textglass_client.o data/hashtable.o data/list.o
+INCLUDES=textglass.h data/tree.h data/queue.h data/list.h data/hashtable.h jsmn/jsmn.h
+OBJS=textglass_client.o jsonfile.o data/hashtable.o data/list.o jsmn/jsmn.o
 
 .PHONY: clean lib
 
@@ -25,4 +25,4 @@ libtextglass.a:		$(OBJS)
 			$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-			$(RM) *.o data/*.o *.so *.a textglass_client
+			$(RM) *.o data/*.o jsmn/*.o *.so *.a textglass_client
