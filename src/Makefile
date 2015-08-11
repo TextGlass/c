@@ -5,7 +5,7 @@ LIBFLAGS=-lpthread
 RM=rm -f
 
 INCLUDES=tree.h queue.h tg_list.h tg_hashtable.h
-OBJS=tg_hashtable.o
+OBJS=tg_hashtable.o tg_list.o
 
 .PHONY: clean lib
 
