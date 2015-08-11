@@ -1,2 +1,5 @@
 src/*.o
+src/*.so
+src/*.a
 src/textglass_client
+src/nbproject

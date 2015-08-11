@@ -1,7 +1,30 @@
 #include <stdio.h>
 
+#include "tg_hashtable.h"
+
 int main(int argc, char **args)
 {
-    printf("TextGlass\n");
-    return 0;
+	tg_hashtable *hashtable;
+
+	printf("TextGlass\n");
+
+	hashtable = tg_hashtable_init(2);
+
+	tg_hashtable_set(hashtable, "1", "one");
+	tg_hashtable_set(hashtable, "2", "two");
+	tg_hashtable_set(hashtable, "3", "three");
+	tg_hashtable_set(hashtable, "4", "four");
+
+	printf("tg_hashtable: %s\n", (char*)tg_hashtable_get(hashtable, "1"));
+	printf("tg_hashtable: %s\n", (char*)tg_hashtable_get(hashtable, "2"));
+	printf("tg_hashtable: %s\n", (char*)tg_hashtable_get(hashtable, "3"));
+	printf("tg_hashtable: %s\n", (char*)tg_hashtable_get(hashtable, "4"));
+	
+	tg_hashtable_delete(hashtable, "3");
+
+	printf("tg_hashtable: %s\n", (char*)tg_hashtable_get(hashtable, "3"));
+
+	tg_hashtable_free(hashtable);
+	
+	return 0;
 }
