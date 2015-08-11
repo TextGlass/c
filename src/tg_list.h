@@ -27,9 +27,9 @@ tg_list;
 
 
 #define tg_list_foreach(list, var)					\
-	for ((var) = TAILQ_FIRST(&(list)->head),				\
-		pthread_rwlock_rdlock(&(list)->rwlock);			\
-		(var) || pthread_rwlock_unlock(&(list)->rwlock) || 0;	\
+	for (pthread_rwlock_rdlock(&(list)->rwlock),			\
+		(var) = TAILQ_FIRST(&(list)->head);			\
+		(var) || (pthread_rwlock_unlock(&(list)->rwlock) && 0);	\
 		(var) = TAILQ_NEXT((var), entry))
 
 tg_list *tg_list_init();
