@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "tg_hashtable.h"
-#include "tg_list.h"
+#include "hashtable.h"
+#include "list.h"
 
 int main(int argc, char **args)
 {
