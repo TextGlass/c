@@ -82,6 +82,8 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 		}
 	}
 
+	free(tokens);
+
 	return jsonfile;
 
 jerror:
@@ -111,5 +113,6 @@ void tg_jsonfile_free(tg_jsonfile *jsonfile)
 		jsonfile->filebuf_len = 0;
 		free(jsonfile->filebuf);
 	}
+
 	free(jsonfile);
 }
