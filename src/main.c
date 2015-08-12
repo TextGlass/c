@@ -24,11 +24,8 @@ int main(int argc, char **argv)
 	char *pattern_patch = NULL;
 	char *attribute_patch = NULL;
 	char *test_string = NULL;
-	tg_jsonfile *pattern_file = NULL;
-	tg_jsonfile *attribute_file = NULL;
-	tg_jsonfile *pattern_patch_file = NULL;
-	tg_jsonfile *attribute_patch_file = NULL;
 	tg_jsonfile *test_file;
+	tg_domain *domain = NULL;
 	int c, exit = 0;
 	struct timespec start, end, diff;
 
@@ -88,68 +85,24 @@ int main(int argc, char **argv)
 		goto mdone;
 	}
 
+	//BUILD THE CLIENT
+
 	clock_gettime(CLOCK_REALTIME, &start);
 
-	//PARSE PATTERN FILE
+	domain = tg_domain_load(pattern, attribute, pattern_patch, attribute_patch);
 
-	tg_printd(1, "Pattern file: %s\n", pattern);
-	pattern_file = tg_jsonfile_get(pattern);
-	if(!pattern_file)
+	if(!domain)
 	{
-		fprintf(stderr, "Error reading pattern file\n");
+		fprintf(stderr, "Could not load domain\n");
 		exit = 1;
 		goto mdone;
 	}
 
-	//PARSE ATTRIBUTE FILE
-
-	if(attribute)
-	{
-		tg_printd(1, "Attribute file: %s\n", attribute);
-		attribute_file = tg_jsonfile_get(attribute);
-		if(!attribute_file)
-		{
-			fprintf(stderr, "Error reading attribute file\n");
-			exit = 1;
-			goto mdone;
-		}
-	}
-
-	//PARSE PATTERN PATCH FILE
-
-	if(pattern_patch)
-	{
-		tg_printd(1, "Pattern patch file: %s\n", pattern_patch);
-		pattern_patch_file = tg_jsonfile_get(pattern_patch);
-		if(!pattern_patch_file)
-		{
-			fprintf(stderr, "Error reading pattern patch file\n");
-			exit = 1;
-			goto mdone;
-		}
-	}
-
-	//PARSE ATTRIBUTE PATCH FILE
-
-	if(attribute_patch)
-	{
-		tg_printd(1, "Attribute patch file: %s\n", attribute_patch);
-		attribute_patch_file = tg_jsonfile_get(attribute_patch);
-		if(!attribute_patch_file)
-		{
-			fprintf(stderr, "Error reading attribute patch file\n");
-			exit = 1;
-			goto mdone;
-		}
-	}
-	
 	clock_gettime(CLOCK_REALTIME, &end);
 	tg_time_diff(&end, &start, &diff);
 
 	tg_printd(0, "Domain load time: %lds %ldms %ld.%ldus\n",
            diff.tv_sec, diff.tv_nsec/1000000, diff.tv_nsec/1000%1000, diff.tv_nsec%1000);
-
-	//BUILD THE CLIENT
 
 	//DO THE TESTS
 
@@ -177,10 +130,7 @@ int main(int argc, char **argv)
 mdone:
 	tg_list_free(tests);
 
-	tg_jsonfile_free(pattern_file);
-	tg_jsonfile_free(attribute_file);
-	tg_jsonfile_free(pattern_patch_file);
-	tg_jsonfile_free(attribute_patch_file);
+	tg_domain_free(domain);
 
 	return exit;
 }

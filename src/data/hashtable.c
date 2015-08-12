@@ -176,10 +176,11 @@ void tg_hashtable_free(tg_hashtable *hashtable)
 		assert(!pthread_rwlock_destroy(&bucket->rwlock));
 	}
 
-	if (hashtable->bucket_len)
+	if (hashtable->buckets)
 	{
 		free(hashtable->buckets);
 		hashtable->bucket_len = 0;
+		hashtable->buckets = NULL;
 	}
 
 	free(hashtable);

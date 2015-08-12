@@ -1,6 +1,6 @@
 #include "textglass.h"
 
-tg_jsonfile *tg_jsonfile_get(char *file)
+tg_jsonfile *tg_jsonfile_get(const char *file)
 {
 	tg_jsonfile *jsonfile;
 	FILE *f;
@@ -10,14 +10,11 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 	char *tbuf;
 	int i;
 
-	jsonfile = malloc(sizeof (tg_jsonfile));
+	assert(file);
+
+	jsonfile = calloc(1, sizeof (tg_jsonfile));
 
 	assert(jsonfile);
-
-	jsonfile->json = NULL;
-	jsonfile->json_len = 0;
-	jsonfile->tokens = NULL;
-	jsonfile->token_len = 0;
 
 	f = fopen(file, "r");
 
@@ -136,17 +133,29 @@ void tg_jsonfile_free(tg_jsonfile *jsonfile)
 	
 	if(jsonfile->json)
 	{
-		jsonfile->json_len = 0;
 		free(jsonfile->json);
+		jsonfile->json_len = 0;
+		jsonfile->json = NULL;
 	}
 
-	if(jsonfile->tokens)
-	{
-		jsonfile->token_len = 0;
-		free(jsonfile->tokens);
-	}
+	tg_jsonfile_free_tokens(jsonfile);
 
 	free(jsonfile);
+}
+
+void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile)
+{
+	if(!jsonfile)
+	{
+		return;
+	}
+	
+	if(jsonfile->tokens)
+	{
+		free(jsonfile->tokens);
+		jsonfile->token_len = 0;
+		jsonfile->tokens = NULL;
+	}
 }
 
 jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field)
