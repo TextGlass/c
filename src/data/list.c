@@ -1,22 +1,47 @@
 #include "list.h"
 
-tg_list *tg_list_init()
+tg_list *tg_list_init(size_t len)
 {
 	tg_list *list;
 
-	list = malloc(sizeof (tg_list));
+	list = calloc(1, sizeof (tg_list) + (sizeof (tg_list_item) * len));
 
 	assert(list);
 
 	list->magic = TG_LIST_MAGIC;
+	list->size = 0;
+	list->prealloc_len = len;
 
 	TAILQ_INIT(&list->head);
-
-	list->size = 0;
 
 	assert(!pthread_rwlock_init(&list->rwlock, NULL));
 
 	return list;
+}
+
+static tg_list_item *tg_list_item_alloc(tg_list *list)
+{
+	tg_list_item *item;
+	int i;
+
+	for(i = 0; i < list->prealloc_len; i++)
+	{
+		item = &list->prealloc[i];
+		if(!item->magic)
+		{
+			item->magic = TG_LIST_ITEM_MAGIC;
+			return item;
+		}
+	}
+
+	item = malloc(sizeof (tg_list_item));
+
+	assert(item);
+
+	item->magic = TG_LIST_ITEM_MAGIC;
+	item->malloc = 1;
+
+	return item;
 }
 
 void tg_list_add(tg_list *list, const void *value)
@@ -28,11 +53,7 @@ void tg_list_add(tg_list *list, const void *value)
 
 	assert(!pthread_rwlock_wrlock(&list->rwlock));
 
-	add = malloc(sizeof (tg_list_item));
-
-	assert(add);
-
-	add->magic = TG_LIST_ITEM_MAGIC;
+	add = tg_list_item_alloc(list);
 
 	add->value = value;
 
@@ -83,9 +104,16 @@ void tg_list_free(tg_list *list)
 
 	TAILQ_FOREACH_SAFE(item, &list->head, entry, next) {
 		TAILQ_REMOVE(&list->head, item, entry);
+
 		assert(item->magic == TG_LIST_ITEM_MAGIC);
+
 		item->magic = 0;
-		free(item);
+
+		if(item->malloc)
+		{
+			free(item);
+		}
+
 		list->size--;
 	}
 

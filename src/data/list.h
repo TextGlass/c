@@ -15,6 +15,8 @@ typedef struct tg_list_item
 	TAILQ_ENTRY(tg_list_item)	entry;
 
 	const void			*value;
+
+	int				malloc:1;
 }
 tg_list_item;
 
@@ -30,6 +32,9 @@ typedef struct
 	pthread_rwlock_t		rwlock;
 
 	size_t				size;
+	size_t				prealloc_len;
+
+	tg_list_item			prealloc[0];
 }
 tg_list;
 
@@ -46,7 +51,7 @@ tg_list;
 		tg_list_item_valid(var);		\
 		(var) = TAILQ_NEXT((var), entry))
 
-tg_list *tg_list_init();
+tg_list *tg_list_init(size_t len);
 void tg_list_add(tg_list *list, const void *item);
 void tg_list_free(tg_list *list);
 int tg_list_item_valid(tg_list_item *item);

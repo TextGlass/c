@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 
 	tg_printd(0, "TextGlass C Client %s\n", TEXTGLASS_VERSION);
 
-	tests = tg_list_init();
+	tests = tg_list_init(3);
 
 	//PARSE THE COMMAND LINE
 
