@@ -66,6 +66,7 @@ void tg_jsonfile_free(tg_jsonfile *jsonfile);
 void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile);
 jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field);
 const char *tg_json_get_str(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field);
+jsmntok_t *tg_json_array_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, int index);
 
 #define TG_JSON_IS_OBJECT(token)		((token) && (token)->type == JSMN_OBJECT)
 #define TG_JSON_IS_STRING(token)		((token) && (token)->type == JSMN_STRING)

@@ -180,7 +180,7 @@ jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *fie
 
 	for(i = 1; i < tokens[0].skip; i++)
 	{
-		if(TG_JSON_IS_STRING(&tokens[i]) && !strcmp(jsonfile->json + tokens[i].start, field) &&
+		if(TG_JSON_IS_STRING(&tokens[i]) && !strcmp(tokens[i].str, field) &&
 			tokens[i].size == 1)
 		{
 			return &tokens[i + 1];
@@ -204,4 +204,30 @@ const char *tg_json_get_str(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char
 	{
 		return token->str;
 	}
+}
+
+jsmntok_t *tg_json_array_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, int index)
+{
+	int i;
+
+	if(!jsonfile || !tokens)
+	{
+		return NULL;
+	}
+
+	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
+
+	assert(TG_JSON_IS_ARRAY(tokens));
+
+	for(i = 1; i < tokens[0].skip; i++, index--)
+	{
+		if(!index)
+		{
+			return &tokens[i];
+		}
+
+		i+= tokens[i].skip;
+	}
+
+	return NULL;
 }
