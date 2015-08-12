@@ -7,6 +7,9 @@
 extern "C" {
 #endif
 
+#define JSMN_PARENT_LINKS
+#define JSMN_STRICT
+
 /**
  * JSON type identifier. Basic types are:
  *      o Object
@@ -43,6 +46,7 @@ typedef struct {
         int size;
 #ifdef JSMN_PARENT_LINKS
         int parent;
+	int skip;
 #endif
 } jsmntok_t;
 

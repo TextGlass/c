@@ -6,16 +6,18 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 	FILE *f;
 	size_t bytes;
 	jsmn_parser parser;
-	jsmntok_t *tokens = NULL, *token;
+	jsmntok_t *token, *parent;
 	char *tbuf;
-	int token_count, i;
+	int i;
 
 	jsonfile = malloc(sizeof (tg_jsonfile));
 
 	assert(jsonfile);
 
-	jsonfile->filebuf = NULL;
-	jsonfile->filebuf_len = 0;
+	jsonfile->json = NULL;
+	jsonfile->json_len = 0;
+	jsonfile->tokens = NULL;
+	jsonfile->token_len = 0;
 
 	f = fopen(file, "r");
 
@@ -25,23 +27,23 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 	}
 
 	fseek(f, 0L, SEEK_END);
-	jsonfile->filebuf_len = ftell(f);
+	jsonfile->json_len = ftell(f);
 	fseek(f, 0L, SEEK_SET);
 
-	if(!jsonfile->filebuf_len)
+	if(!jsonfile->json_len || jsonfile->json_len > 1800 * 1024 * 1024)
 	{
 		goto jerror;
 	}
 
-	tg_printd(3, "Reading %s (%zu bytes)\n", file, jsonfile->filebuf_len);
+	tg_printd(3, "Reading %s (%zu bytes)\n", file, jsonfile->json_len);
 
-	jsonfile->filebuf = malloc(jsonfile->filebuf_len);
+	jsonfile->json = malloc(jsonfile->json_len);
 
-	assert(jsonfile->filebuf);
+	assert(jsonfile->json);
 
-	bytes = fread(jsonfile->filebuf, 1, jsonfile->filebuf_len, f);
+	bytes = fread(jsonfile->json, 1, jsonfile->json_len, f);
 
-	if(bytes != jsonfile->filebuf_len)
+	if(bytes != jsonfile->json_len)
 	{
 		goto jerror;
 	}
@@ -51,38 +53,49 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 
 	jsmn_init(&parser);
 
-	token_count = jsmn_parse(&parser, jsonfile->filebuf, jsonfile->filebuf_len, NULL, 0);
+	jsonfile->token_len = jsmn_parse(&parser, jsonfile->json, jsonfile->json_len, NULL, 0);
 
-	tg_printd(3, "jsmn_parse token count: %d\n", token_count);
+	tg_printd(3, "jsmn_parse token count: %d\n", jsonfile->token_len);
 
-	if(token_count < 1)
+	if(jsonfile->token_len < 1)
 	{
 		goto jerror;
 	}
 
-	tokens = malloc(sizeof (jsmntok_t) * token_count);
+	jsonfile->tokens = malloc(sizeof (jsmntok_t) * jsonfile->token_len);
 
-	assert(tokens);
+	assert(jsonfile->tokens);
 
 	jsmn_init(&parser);
 
-	token_count = jsmn_parse(&parser, jsonfile->filebuf, jsonfile->filebuf_len, tokens, token_count);
+	jsonfile->token_len = jsmn_parse(&parser, jsonfile->json, jsonfile->json_len, jsonfile->tokens, jsonfile->token_len);
 
-	for(i = 0; i < token_count; i++)
+	if(jsonfile->token_len < 1 || jsonfile->tokens[0].type != JSMN_OBJECT)
 	{
-		token = &tokens[i];
+		goto jerror;
+	}
 
-		tbuf = jsonfile->filebuf + token->start;
+	for(i = 0; i < jsonfile->token_len; i++)
+	{
+		token = &jsonfile->tokens[i];
+
+		tbuf = jsonfile->json + token->start;
 		tbuf[token->end - token->start] = '\0';
 
-		if(token->type == 3 || token->type == 0)
-		{
-			tg_printd(3, "token %d: type=%d children=%d s=%d e=%d value='%s'\n", i,
-				token->type, token->size, token->start, token->end, tbuf);
+		parent = token;
+
+		while(parent->parent >= 0) {
+			parent = &jsonfile->tokens[parent->parent];
+			parent->skip++;
 		}
 	}
 
-	free(tokens);
+	token = tg_json_get(jsonfile, jsonfile->tokens, "TextGlassSpecVersion");
+	tg_printd(3, "TextGlassSpecVersion: %s\n", TG_JSON_STR(jsonfile, token));
+
+	token = tg_json_get(jsonfile, jsonfile->tokens, "legal");
+	token = tg_json_get(jsonfile, token, "copyright");
+	tg_printd(3, "Copyright: %s\n", TG_JSON_STR(jsonfile, token));
 
 	return jsonfile;
 
@@ -94,11 +107,6 @@ jerror:
 
 	tg_jsonfile_free(jsonfile);
 
-	if(tokens)
-	{
-		free(tokens);
-	}
-
 	return NULL;
 }
 
@@ -109,10 +117,42 @@ void tg_jsonfile_free(tg_jsonfile *jsonfile)
 		return;
 	}
 	
-	if(jsonfile->filebuf) {
-		jsonfile->filebuf_len = 0;
-		free(jsonfile->filebuf);
+	if(jsonfile->json)
+	{
+		jsonfile->json_len = 0;
+		free(jsonfile->json);
+	}
+
+	if(jsonfile->tokens)
+	{
+		jsonfile->token_len = 0;
+		free(jsonfile->tokens);
 	}
 
 	free(jsonfile);
+}
+
+jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field)
+{
+	int i;
+
+	if(!tokens)
+	{
+		return NULL;
+	}
+
+	assert(tokens[0].type == JSMN_OBJECT);
+
+	for(i = 1; i < tokens[0].skip; i++)
+	{
+		if(tokens[i].type == JSMN_STRING && !strcmp(jsonfile->json + tokens[i].start, field) &&
+			tokens[i].size == 1)
+		{
+			return &tokens[i + 1];
+		}
+
+		i+= tokens[i].skip;
+	}
+
+	return NULL;
 }

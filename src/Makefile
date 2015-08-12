@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O3 -Wall -fPIC -Idata -Ijsmn
+CFLAGS=-O3 -Wall -g -fPIC -Idata -Ijsmn
 LDFLAGS=
 LIBFLAGS=-lpthread
 RM=rm -f
