@@ -37,7 +37,8 @@ int main(int argc, char **argv)
 
 	opterr = 0;
 
-	while ((c = getopt(argc, argv, "p:a:s:b:t:hu:qvw")) != -1) {
+	while ((c = getopt(argc, argv, "p:a:s:b:t:hu:qvw")) != -1)
+	{
 		switch (c)
 		{
 			case 'h':
@@ -78,7 +79,8 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if(!pattern) {
+	if(!pattern)
+	{
 		printHelp();
 		fprintf(stderr, "\npattern file required\n");
 		exit = 1;
@@ -112,7 +114,6 @@ int main(int argc, char **argv)
 		test_file = tg_jsonfile_get((char*)item->value);
 		if(!test_file)
 		{
-			tg_list_unlock(tests);
 			fprintf(stderr, "Error reading test file\n");
 			exit = 1;
 			goto mdone;
@@ -125,6 +126,16 @@ int main(int argc, char **argv)
 	if(test_string)
 	{
 		tg_printd(1, "Test string: '%s'\n", test_string);
+
+		clock_gettime(CLOCK_REALTIME, &start);
+
+		tg_classify(domain, test_string);
+
+		clock_gettime(CLOCK_REALTIME, &end);
+		tg_time_diff(&end, &start, &diff);
+
+		tg_printd(0, "Test time: %lds %ldms %ld.%ldus\n",
+		   diff.tv_sec, diff.tv_nsec/1000000, diff.tv_nsec/1000%1000, diff.tv_nsec%1000);
 	}
 
 	//CLEANUP

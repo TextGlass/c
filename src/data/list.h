@@ -34,11 +34,16 @@ typedef struct
 tg_list;
 
 
-#define tg_list_foreach(list, var)			\
+#define tg_list_foreach_lock(list, var)			\
 	for (tg_list_rlock(list),			\
 		(var) = TAILQ_FIRST(&(list)->head);	\
 		tg_list_item_valid(var) ||		\
 		(tg_list_unlock(list) && 0);		\
+		(var) = TAILQ_NEXT((var), entry))
+
+#define tg_list_foreach(list, var)			\
+	for ((var) = TAILQ_FIRST(&(list)->head);	\
+		tg_list_item_valid(var);		\
 		(var) = TAILQ_NEXT((var), entry))
 
 tg_list *tg_list_init();

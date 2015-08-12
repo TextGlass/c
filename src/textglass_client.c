@@ -1,4 +1,5 @@
 #include "textglass.h"
+#include "list.h"
 
 static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch);
@@ -81,6 +82,8 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch)
 {
 	tg_domain *domain;
+	jsmntok_t *token, *tokens, *norm, *patch;
+	int i;
 
 	assert(pattern);
 
@@ -98,9 +101,39 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	domain->domain = pattern->domain;
 	domain->domain_version = pattern->domain_version;
 
-	if(1 == 0)
+	//LOAD THE INPUT PARSERS
+
+	norm = tg_json_get(domain->pattern, domain->pattern->tokens, "inputParser");
+	patch = NULL;
+
+	if(domain->pattern_patch)
 	{
-		goto derror;
+		patch = tg_json_get(domain->pattern_patch, domain->pattern_patch->tokens, "inputParser");
+	}
+
+	//TOKEN SEPERATORS
+
+	tokens = tg_json_get(domain->pattern_patch, patch, "tokenSeperators");
+
+	if(!TG_JSON_IS_ARRAY(tokens))
+	{
+		tokens = tg_json_get(domain->pattern, norm, "tokenSeperators");
+	}
+
+	if(TG_JSON_IS_ARRAY(tokens))
+	{
+		domain->token_seperator_len = tokens->size;
+		domain->token_seperators = malloc(sizeof (char*) * domain->token_seperator_len);
+
+		assert(domain->token_seperators);
+
+		for(i = 0; i < tokens->size; i++)
+		{
+			token = &tokens[i + 1];
+			domain->token_seperators[i] = token->str;
+			
+			tg_printd(2, "Found tokenSeperators: '%s'\n", token->str);
+		}
 	}
 
 	tg_jsonfile_free_tokens(domain->pattern);
@@ -109,11 +142,39 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	tg_jsonfile_free_tokens(domain->attribute_patch);
 
 	return domain;
-
+/*
 derror:
 	tg_domain_free(domain);
 
 	return NULL;
+ */
+}
+
+void tg_classify(tg_domain *domain, const char *original)
+{
+	char *input;
+	size_t length;
+	tg_list *tokens;
+	tg_list_item *item;
+
+	input = strdup(original);
+	length = strlen(input);
+
+	tg_printd(2, "classify input on %s: '%s':%zu\n", domain->domain, input, length);
+
+	//TOKEN SEPERATORS
+
+	tokens = tg_list_init();
+
+	tg_split(input, length, domain->token_seperators, domain->token_seperator_len, tokens);
+
+	tg_list_foreach(tokens, item)
+	{
+		tg_printd(3, "classify tokens: '%s'\n", (char*)item->value);
+	}
+
+	tg_list_free(tokens);
+	free(input);
 }
 
 void tg_domain_free(tg_domain *domain)
@@ -134,6 +195,12 @@ void tg_domain_free(tg_domain *domain)
 	domain->attribute = NULL;
 	domain->pattern_patch = NULL;
 	domain->attribute_patch = NULL;
+
+	if(domain->token_seperators)
+	{
+		free(domain->token_seperators);
+		domain->token_seperator_len = 0;
+	}
 
 	domain->magic = 0;
 

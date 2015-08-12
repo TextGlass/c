@@ -14,6 +14,7 @@ static jsmntok_t *jsmn_alloc_token(jsmn_parser *parser,
         tok = &tokens[parser->toknext++];
         tok->start = tok->end = -1;
         tok->size = 0;
+	tok->str = NULL;
 #ifdef JSMN_PARENT_LINKS
         tok->parent = -1;
 	tok->skip = 0;

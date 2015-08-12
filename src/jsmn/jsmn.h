@@ -40,6 +40,7 @@ typedef enum {
  * @param               end             end position in JSON data string
  */
 typedef struct {
+	const char *str;
         jsmntype_t type;
         int start;
         int end;

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "list.h"
 #include "jsmn.h"
 
 
@@ -46,6 +47,9 @@ typedef struct
 
 	const char		*domain;
 	const char		*domain_version;
+
+	const char		**token_seperators;
+	int			token_seperator_len;
 }
 tg_domain;
 
@@ -54,21 +58,25 @@ extern int tg_printd_debug_level;
 
 void tg_printd(int level, const char* fmt,...);
 void tg_time_diff(struct timespec *end, struct timespec *start, struct timespec *result);
+void tg_split(char *source, size_t source_len, const char **seps, int sep_length, tg_list *tokens);
 
 
 tg_jsonfile *tg_jsonfile_get(const char *file);
 void tg_jsonfile_free(tg_jsonfile *jsonfile);
 void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile);
 jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field);
+const char *tg_json_get_str(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field);
 
-#define TG_JSON_STR(jsonfile, token) ((token) ? (jsonfile)->json + (token)->start : "")
-#define TG_JSON_STR_NULL(jsonfile, token) ((token) ? (jsonfile)->json + (token)->start : NULL)
-#define TG_JSON_GET_STR(jsonfile, tokens, attr) \
-		TG_JSON_STR_NULL((jsonfile), tg_json_get((jsonfile), (tokens), attr))
+#define TG_JSON_IS_OBJECT(token)		((token) && (token)->type == JSMN_OBJECT)
+#define TG_JSON_IS_STRING(token)		((token) && (token)->type == JSMN_STRING)
+#define TG_JSON_IS_ARRAY(token)			((token) && (token)->type == JSMN_ARRAY)
+#define TG_JSON_IS_LITERAL(token)		((token) && (token)->type == JSMN_PRIMITIVE)
 
 
 tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 		const char *pattern_patch, const char *attribute_patch);
 void tg_domain_free(tg_domain *domain);
+void tg_classify(tg_domain *domain, const char *original);
+
 
 #endif	/* _TEXTGLASS_H_INCLUDED_ */

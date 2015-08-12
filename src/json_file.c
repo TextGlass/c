@@ -7,7 +7,6 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 	size_t bytes;
 	jsmn_parser parser;
 	jsmntok_t *token, *parent;
-	char *tbuf;
 	int i;
 
 	assert(file);
@@ -71,7 +70,7 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 
 	jsonfile->token_len = jsmn_parse(&parser, jsonfile->json, jsonfile->json_len, jsonfile->tokens, jsonfile->token_len);
 
-	if(jsonfile->token_len < 1 || jsonfile->tokens[0].type != JSMN_OBJECT)
+	if(jsonfile->token_len < 1 || !TG_JSON_IS_OBJECT(jsonfile->tokens))
 	{
 		fprintf(stderr, "Invalid JSON file\n");
 		goto jerror;
@@ -81,8 +80,8 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 	{
 		token = &jsonfile->tokens[i];
 
-		tbuf = jsonfile->json + token->start;
-		tbuf[token->end - token->start] = '\0';
+		token->str = jsonfile->json + token->start;
+		jsonfile->json[token->end] = '\0';
 
 		parent = token;
 
@@ -94,15 +93,15 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 
 	token = tg_json_get(jsonfile, jsonfile->tokens, "TextGlassSpecVersion");
 
-	if(strcmp(TG_JSON_STR(jsonfile, token), "1.0"))
+	if(!token || strcmp(token->str, "1.0"))
 	{
-		fprintf(stderr, "Invalid TextGlassSpecVersion: %s\n", TG_JSON_STR(jsonfile, token));
+		fprintf(stderr, "Invalid TextGlassSpecVersion found\n");
 		goto jerror;
 	}
 
-	jsonfile->type = TG_JSON_GET_STR(jsonfile, jsonfile->tokens, "type");
-	jsonfile->domain = TG_JSON_GET_STR(jsonfile, jsonfile->tokens, "domain");
-	jsonfile->domain_version = TG_JSON_GET_STR(jsonfile, jsonfile->tokens, "domainVersion");
+	jsonfile->type = tg_json_get_str(jsonfile, jsonfile->tokens, "type");
+	jsonfile->domain = tg_json_get_str(jsonfile, jsonfile->tokens, "domain");
+	jsonfile->domain_version = tg_json_get_str(jsonfile, jsonfile->tokens, "domainVersion");
 
 	if(!jsonfile->type || !jsonfile->domain || !jsonfile->domain_version)
 	{
@@ -170,18 +169,18 @@ jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *fie
 {
 	int i;
 
-	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
-
-	if(!tokens)
+	if(!jsonfile || !tokens)
 	{
 		return NULL;
 	}
 
-	assert(tokens[0].type == JSMN_OBJECT);
+	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
+
+	assert(TG_JSON_IS_OBJECT(tokens));
 
 	for(i = 1; i < tokens[0].skip; i++)
 	{
-		if(tokens[i].type == JSMN_STRING && !strcmp(jsonfile->json + tokens[i].start, field) &&
+		if(TG_JSON_IS_STRING(&tokens[i]) && !strcmp(jsonfile->json + tokens[i].start, field) &&
 			tokens[i].size == 1)
 		{
 			return &tokens[i + 1];
@@ -191,4 +190,18 @@ jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *fie
 	}
 
 	return NULL;
+}
+
+const char *tg_json_get_str(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field)
+{
+	jsmntok_t *token = tg_json_get(jsonfile, tokens, field);
+
+	if(!token)
+	{
+		return NULL;
+	}
+	else
+	{
+		return token->str;
+	}
 }
