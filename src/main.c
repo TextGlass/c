@@ -112,6 +112,7 @@ int main(int argc, char **argv)
 		test_file = tg_jsonfile_get((char*)item->value);
 		if(!test_file)
 		{
+			tg_list_unlock(tests);
 			fprintf(stderr, "Error reading test file\n");
 			exit = 1;
 			goto mdone;

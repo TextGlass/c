@@ -151,6 +151,7 @@ int tg_hashtable_delete(tg_hashtable *hashtable, const char *key)
 	{
 		assert(result->magic == TG_HASHTABLE_KEY_MAGIC);
 		RB_REMOVE(tg_hashtable_rbtree, &bucket->rbtree, result);
+		result->magic = 0;
 		free(result);
 		bucket->size--;
 		ret = 1;
@@ -181,6 +182,7 @@ void tg_hashtable_free(tg_hashtable *hashtable)
 		{
 			RB_REMOVE(tg_hashtable_rbtree, &bucket->rbtree, key);
 			assert(key->magic == TG_HASHTABLE_KEY_MAGIC);
+			key->magic = 0;
 			free(key);
 			bucket->size--;
 		}
