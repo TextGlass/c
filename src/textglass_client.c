@@ -88,6 +88,8 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	assert(domain);
 
+	domain->magic = TG_DOMAIN_MAGIC;
+
 	domain->pattern = pattern;
 	domain->attribute = attribute;
 	domain->pattern_patch = pattern_patch;
@@ -120,6 +122,8 @@ void tg_domain_free(tg_domain *domain)
 	{
 		return;
 	}
+
+	assert(domain->magic == TG_DOMAIN_MAGIC);
 	
 	tg_jsonfile_free(domain->pattern);
 	tg_jsonfile_free(domain->attribute);
@@ -130,6 +134,8 @@ void tg_domain_free(tg_domain *domain)
 	domain->attribute = NULL;
 	domain->pattern_patch = NULL;
 	domain->attribute_patch = NULL;
+
+	domain->magic = 0;
 
 	free(domain);
 }

@@ -16,6 +16,8 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 
 	assert(jsonfile);
 
+	jsonfile->magic = TG_JSONFILE_MAGIC;
+
 	f = fopen(file, "r");
 
 	if(!f)
@@ -130,6 +132,8 @@ void tg_jsonfile_free(tg_jsonfile *jsonfile)
 	{
 		return;
 	}
+
+	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
 	
 	if(jsonfile->json)
 	{
@@ -140,6 +144,8 @@ void tg_jsonfile_free(tg_jsonfile *jsonfile)
 
 	tg_jsonfile_free_tokens(jsonfile);
 
+	jsonfile->magic = 0;
+
 	free(jsonfile);
 }
 
@@ -149,6 +155,8 @@ void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile)
 	{
 		return;
 	}
+
+	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
 	
 	if(jsonfile->tokens)
 	{
@@ -161,6 +169,8 @@ void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile)
 jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field)
 {
 	int i;
+
+	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
 
 	if(!tokens)
 	{

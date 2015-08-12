@@ -19,6 +19,9 @@
 
 typedef struct
 {
+	unsigned int		magic;
+#define TG_JSONFILE_MAGIC	0xCD1C4F8B
+
 	char			*json;
 	size_t			json_len;
 
@@ -33,6 +36,9 @@ tg_jsonfile;
 
 typedef struct
 {
+	unsigned int		magic;
+#define TG_DOMAIN_MAGIC		0x4C3A041E
+
 	tg_jsonfile		*pattern;
 	tg_jsonfile		*attribute;
 	tg_jsonfile		*pattern_patch;
