@@ -1,6 +1,8 @@
 #ifndef _TG_LIST_H_INCLUDED_
 #define _TG_LIST_H_INCLUDED_
 
+#include <stdlib.h>
+#include <assert.h>
 #include <pthread.h>
 
 #include "queue.h"

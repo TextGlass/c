@@ -8,11 +8,17 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "jsmn.h"
+
 #define TEXTGLASS_VERSION		"1.0.0"
 
 
 #define TG_DEBUG_LOGGING		1
 #define TG_DEBUG_LEVEL			3
+
+
+#define JSMN_PARENT_LINKS
+#define JSMN_STRICT
 
 
 typedef struct

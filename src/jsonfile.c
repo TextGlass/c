@@ -5,6 +5,10 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 	tg_jsonfile *jsonfile;
 	FILE *f;
 	size_t bytes;
+	jsmn_parser parser;
+	jsmntok_t *tokens = NULL, *token;
+	char *tbuf;
+	int token_count, i;
 
 	jsonfile = malloc(sizeof (tg_jsonfile));
 
@@ -29,7 +33,7 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 		goto jerror;
 	}
 
-	tg_printd(2, "Reading %s (%zu bytes)\n", file, jsonfile->filebuf_len);
+	tg_printd(3, "Reading %s (%zu bytes)\n", file, jsonfile->filebuf_len);
 
 	jsonfile->filebuf = malloc(jsonfile->filebuf_len);
 
@@ -43,6 +47,40 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 	}
 
 	fclose(f);
+	f = NULL;
+
+	jsmn_init(&parser);
+
+	token_count = jsmn_parse(&parser, jsonfile->filebuf, jsonfile->filebuf_len, NULL, 0);
+
+	tg_printd(3, "jsmn_parse token count: %d\n", token_count);
+
+	if(token_count < 1)
+	{
+		goto jerror;
+	}
+
+	tokens = malloc(sizeof (jsmntok_t) * token_count);
+
+	assert(tokens);
+
+	jsmn_init(&parser);
+
+	token_count = jsmn_parse(&parser, jsonfile->filebuf, jsonfile->filebuf_len, tokens, token_count);
+
+	for(i = 0; i < token_count; i++)
+	{
+		token = &tokens[i];
+
+		tbuf = jsonfile->filebuf + token->start;
+		tbuf[token->end - token->start] = '\0';
+
+		if(token->type == 3 || token->type == 0)
+		{
+			tg_printd(3, "token %d: type=%d children=%d s=%d e=%d value='%s'\n", i,
+				token->type, token->size, token->start, token->end, tbuf);
+		}
+	}
 
 	return jsonfile;
 
@@ -53,6 +91,11 @@ jerror:
 	}
 
 	tg_jsonfile_free(jsonfile);
+
+	if(tokens)
+	{
+		free(tokens);
+	}
 
 	return NULL;
 }

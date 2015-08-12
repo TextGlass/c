@@ -1,6 +1,3 @@
-#include <stdlib.h>
-#include <assert.h>
-
 #include "list.h"
 
 tg_list *tg_list_init()

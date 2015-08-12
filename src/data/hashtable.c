@@ -1,7 +1,3 @@
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
 #include "hashtable.h"
 
 static int tg_hashtable_cmp(const tg_hashtable_key *k1, const tg_hashtable_key *k2);

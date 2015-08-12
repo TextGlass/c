@@ -21,14 +21,14 @@ int main(int argc, char **argv)
 	tg_list_item *item;
 	char *pattern = NULL;
 	char *attribute = NULL;
-	char *patternPatch = NULL;
-	char *attributePatch = NULL;
-	char *testString = NULL;
-	tg_jsonfile *patternFile = NULL;
-	tg_jsonfile *attributeFile = NULL;
-	tg_jsonfile *patternPatchFile = NULL;
-	tg_jsonfile *attributePatchFile = NULL;
-	tg_jsonfile *testFile;
+	char *pattern_patch = NULL;
+	char *attribute_patch = NULL;
+	char *test_string = NULL;
+	tg_jsonfile *pattern_file = NULL;
+	tg_jsonfile *attribute_file = NULL;
+	tg_jsonfile *pattern_patch_file = NULL;
+	tg_jsonfile *attribute_patch_file = NULL;
+	tg_jsonfile *test_file;
 	int c, exit = 0;
 
 	printf("TextGlass C Client %s\n", TEXTGLASS_VERSION);
@@ -52,16 +52,16 @@ int main(int argc, char **argv)
 				attribute = optarg;
 				break;
 			case 'q':
-				patternPatch = optarg;
+				pattern_patch = optarg;
 				break;
 			case 'b':
-				attributePatch = optarg;
+				attribute_patch = optarg;
 				break;
 			case 't':
 				tg_list_add(tests, optarg);
 				break;
 			case 'u':
-				testString = optarg;
+				test_string = optarg;
 				break;
 			default:
 				printHelp();
@@ -80,9 +80,9 @@ int main(int argc, char **argv)
 
 	//PARSE PATTERN FILE
 
-	printf("Pattern file: %s\n", pattern);
-	patternFile = tg_jsonfile_get(pattern);
-	if(!patternFile)
+	tg_printd(1, "Pattern file: %s\n", pattern);
+	pattern_file = tg_jsonfile_get(pattern);
+	if(!pattern_file)
 	{
 		fprintf(stderr, "Error reading pattern file\n");
 		exit = 1;
@@ -93,9 +93,9 @@ int main(int argc, char **argv)
 
 	if(attribute)
 	{
-		printf("Attribute file: %s\n", attribute);
-		attributeFile = tg_jsonfile_get(attribute);
-		if(!attributeFile)
+		tg_printd(1, "Attribute file: %s\n", attribute);
+		attribute_file = tg_jsonfile_get(attribute);
+		if(!attribute_file)
 		{
 			fprintf(stderr, "Error reading attribute file\n");
 			exit = 1;
@@ -105,11 +105,11 @@ int main(int argc, char **argv)
 
 	//PARSE PATTERN PATCH FILE
 
-	if(patternPatch)
+	if(pattern_patch)
 	{
-		printf("Pattern patch file: %s\n", patternPatch);
-		patternPatchFile = tg_jsonfile_get(patternPatch);
-		if(!patternPatchFile)
+		tg_printd(1, "Pattern patch file: %s\n", pattern_patch);
+		pattern_patch_file = tg_jsonfile_get(pattern_patch);
+		if(!pattern_patch_file)
 		{
 			fprintf(stderr, "Error reading pattern patch file\n");
 			exit = 1;
@@ -119,11 +119,11 @@ int main(int argc, char **argv)
 
 	//PARSE ATTRIBUTE PATCH FILE
 
-	if(attributePatch)
+	if(attribute_patch)
 	{
-		printf("Attribute patch file: %s\n", attributePatch);
-		attributePatchFile = tg_jsonfile_get(attributePatch);
-		if(!attributePatchFile)
+		tg_printd(1, "Attribute patch file: %s\n", attribute_patch);
+		attribute_patch_file = tg_jsonfile_get(attribute_patch);
+		if(!attribute_patch_file)
 		{
 			fprintf(stderr, "Error reading attribute patch file\n");
 			exit = 1;
@@ -135,32 +135,32 @@ int main(int argc, char **argv)
 
 	tg_list_foreach(tests, item)
 	{
-		printf("Test file: %s\n", (char*)item->value);
-		testFile = tg_jsonfile_get((char*)item->value);
-		if(!testFile)
+		tg_printd(1, "Test file: %s\n", (char*)item->value);
+		test_file = tg_jsonfile_get((char*)item->value);
+		if(!test_file)
 		{
 			fprintf(stderr, "Error reading test file\n");
 			exit = 1;
 			goto mdone;
 		}
-		tg_jsonfile_free(testFile);
+		tg_jsonfile_free(test_file);
 	}
 
 	//TEST INPUT
 
-	if(testString)
+	if(test_string)
 	{
-		printf("Test string: '%s'\n", testString);
+		tg_printd(1, "Test string: '%s'\n", test_string);
 	}
 
 	//CLEANUP
 mdone:
 	tg_list_free(tests);
 
-	tg_jsonfile_free(patternFile);
-	tg_jsonfile_free(attributeFile);
-	tg_jsonfile_free(patternPatchFile);
-	tg_jsonfile_free(attributePatchFile);
+	tg_jsonfile_free(pattern_file);
+	tg_jsonfile_free(attribute_file);
+	tg_jsonfile_free(pattern_patch_file);
+	tg_jsonfile_free(attribute_patch_file);
 
 	return exit;
 }

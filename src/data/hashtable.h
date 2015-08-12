@@ -1,6 +1,9 @@
 #ifndef _TG_HASHTABLE_H_INCLUDED_
 #define _TG_HASHTABLE_H_INCLUDED_
 
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include <pthread.h>
 
 #include "tree.h"
