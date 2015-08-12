@@ -23,6 +23,7 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 
 	if(!f)
 	{
+		fprintf(stderr, "Invalid JSON file\n");
 		goto jerror;
 	}
 
@@ -32,10 +33,11 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 
 	if(!jsonfile->json_len || jsonfile->json_len > 1800 * 1024 * 1024)
 	{
+		fprintf(stderr, "Invalid JSON file\n");
 		goto jerror;
 	}
 
-	tg_printd(3, "Reading %s (%zu bytes)\n", file, jsonfile->json_len);
+	tg_printd(2, "Reading %s (%zu bytes)\n", file, jsonfile->json_len);
 
 	jsonfile->json = malloc(jsonfile->json_len);
 
@@ -45,6 +47,7 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 
 	if(bytes != jsonfile->json_len)
 	{
+		fprintf(stderr, "Invalid JSON file\n");
 		goto jerror;
 	}
 
@@ -55,10 +58,9 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 
 	jsonfile->token_len = jsmn_parse(&parser, jsonfile->json, jsonfile->json_len, NULL, 0);
 
-	tg_printd(3, "jsmn_parse token count: %d\n", jsonfile->token_len);
-
 	if(jsonfile->token_len < 1)
 	{
+		fprintf(stderr, "Invalid JSON file\n");
 		goto jerror;
 	}
 
@@ -72,6 +74,7 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 
 	if(jsonfile->token_len < 1 || jsonfile->tokens[0].type != JSMN_OBJECT)
 	{
+		fprintf(stderr, "Invalid JSON file\n");
 		goto jerror;
 	}
 
@@ -91,11 +94,25 @@ tg_jsonfile *tg_jsonfile_get(char *file)
 	}
 
 	token = tg_json_get(jsonfile, jsonfile->tokens, "TextGlassSpecVersion");
-	tg_printd(3, "TextGlassSpecVersion: %s\n", TG_JSON_STR(jsonfile, token));
 
-	token = tg_json_get(jsonfile, jsonfile->tokens, "legal");
-	token = tg_json_get(jsonfile, token, "copyright");
-	tg_printd(3, "Copyright: %s\n", TG_JSON_STR(jsonfile, token));
+	if(strcmp(TG_JSON_STR(jsonfile, token), "1.0"))
+	{
+		fprintf(stderr, "Invalid TextGlassSpecVersion: %s\n", TG_JSON_STR(jsonfile, token));
+		goto jerror;
+	}
+
+	jsonfile->type = TG_JSON_GET_STR(jsonfile, jsonfile->tokens, "type");
+	jsonfile->domain = TG_JSON_GET_STR(jsonfile, jsonfile->tokens, "domain");
+	jsonfile->domain_version = TG_JSON_GET_STR(jsonfile, jsonfile->tokens, "domainVersion");
+
+	if(!jsonfile->type || !jsonfile->domain || !jsonfile->domain_version)
+	{
+		fprintf(stderr, "Invalid JSON file\n");
+		goto jerror;
+	}
+
+	tg_printd(1, "Loaded %s file, domain: %s, version: %s, json tokens: %d\n",
+		 jsonfile->type, jsonfile->domain, jsonfile->domain_version, jsonfile->token_len);
 
 	return jsonfile;
 

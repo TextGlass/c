@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
 	opterr = 0;
 
-	while ((c = getopt(argc, argv, "p:a:q:b:t:hu:")) != -1) {
+	while ((c = getopt(argc, argv, "p:a:s:b:t:hu:qvw")) != -1) {
 		switch (c)
 		{
 			case 'h':
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 			case 'a':
 				attribute = optarg;
 				break;
-			case 'q':
+			case 's':
 				pattern_patch = optarg;
 				break;
 			case 'b':
@@ -62,6 +62,15 @@ int main(int argc, char **argv)
 				break;
 			case 'u':
 				test_string = optarg;
+				break;
+			case 'q':
+				tg_printd_debug_level = 0;
+				break;
+			case 'v':
+				tg_printd_debug_level = 2;
+				break;
+			case 'w':
+				tg_printd_debug_level = 3;
 				break;
 			default:
 				printHelp();
