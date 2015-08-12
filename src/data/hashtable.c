@@ -16,6 +16,8 @@ tg_hashtable *tg_hashtable_init(size_t buckets)
 
 	assert(hashtable);
 
+	hashtable->magic = TG_HASHTABLE_MAGIC;
+
 	hashtable->bucket_len = buckets;
 
 	hashtable->buckets = malloc(hashtable->bucket_len * sizeof (tg_hashtable_bucket));
@@ -25,6 +27,8 @@ tg_hashtable *tg_hashtable_init(size_t buckets)
 	for (i = 0; i < hashtable->bucket_len; i++)
 	{
 		bucket = &(hashtable->buckets[i]);
+
+		bucket->magic = TG_HASHTABLE_BUCKET_MAGIC;
 
 		RB_INIT(&bucket->rbtree);
 
@@ -62,12 +66,14 @@ const void *tg_hashtable_get(tg_hashtable *hashtable, const char *key)
 	tg_hashtable_key *result, find;
 	const void *ret = NULL;
 
-	assert(hashtable);
+	assert(hashtable && hashtable->magic == TG_HASHTABLE_MAGIC);
 	assert(key);
 
 	find.key = key;
 
 	bucket = tg_hashtable_hash_djb2(hashtable, key);
+
+	assert(bucket->magic == TG_HASHTABLE_BUCKET_MAGIC);
 
 	assert(!pthread_rwlock_rdlock(&bucket->rwlock));
 
@@ -75,6 +81,7 @@ const void *tg_hashtable_get(tg_hashtable *hashtable, const char *key)
 
 	if(result)
 	{
+		assert(result->magic == TG_HASHTABLE_KEY_MAGIC);
 		ret = result->value;
 	}
 
@@ -88,17 +95,21 @@ void tg_hashtable_set(tg_hashtable *hashtable, const char *key, const void *valu
 	tg_hashtable_bucket *bucket;
 	tg_hashtable_key *add, *ret;
 
-	assert(hashtable);
+	assert(hashtable && hashtable->magic == TG_HASHTABLE_MAGIC);
 	assert(key);
 	assert(value);
 
 	bucket = tg_hashtable_hash_djb2(hashtable, key);
+
+	assert(bucket->magic == TG_HASHTABLE_BUCKET_MAGIC);
 
 	assert(!pthread_rwlock_wrlock(&bucket->rwlock));
 
 	add = malloc(sizeof (tg_hashtable_key));
 
 	assert(add);
+
+	add->magic = TG_HASHTABLE_KEY_MAGIC;
 
 	add->key = key;
 	add->value = value;
@@ -107,6 +118,7 @@ void tg_hashtable_set(tg_hashtable *hashtable, const char *key, const void *valu
 
 	if (ret)
 	{
+		assert(ret->magic == TG_HASHTABLE_KEY_MAGIC);
 		ret->key = key;
 		ret->value = value;
 	}
@@ -122,12 +134,14 @@ int tg_hashtable_delete(tg_hashtable *hashtable, const char *key)
 	tg_hashtable_key *result, find;
 	int ret = 0;
 
-	assert(hashtable);
+	assert(hashtable && hashtable->magic == TG_HASHTABLE_MAGIC);
 	assert(key);
 
 	find.key = key;
 
 	bucket = tg_hashtable_hash_djb2(hashtable, key);
+
+	assert(bucket->magic == TG_HASHTABLE_BUCKET_MAGIC);
 
 	assert(!pthread_rwlock_wrlock(&bucket->rwlock));
 
@@ -135,6 +149,7 @@ int tg_hashtable_delete(tg_hashtable *hashtable, const char *key)
 
 	if (result)
 	{
+		assert(result->magic == TG_HASHTABLE_KEY_MAGIC);
 		RB_REMOVE(tg_hashtable_rbtree, &bucket->rbtree, result);
 		free(result);
 		bucket->size--;
@@ -152,17 +167,20 @@ void tg_hashtable_free(tg_hashtable *hashtable)
 	tg_hashtable_key *key, *next;
 	size_t i;
 
-	assert(hashtable);
+	assert(hashtable && hashtable->magic == TG_HASHTABLE_MAGIC);
 
 	for (i = 0; i < hashtable->bucket_len; i++)
 	{
 		bucket = &(hashtable->buckets[i]);
+
+		assert(bucket->magic == TG_HASHTABLE_BUCKET_MAGIC);
 
 		assert(!pthread_rwlock_wrlock(&bucket->rwlock));
 
 		RB_FOREACH_SAFE(key, tg_hashtable_rbtree, &bucket->rbtree, next)
 		{
 			RB_REMOVE(tg_hashtable_rbtree, &bucket->rbtree, key);
+			assert(key->magic == TG_HASHTABLE_KEY_MAGIC);
 			free(key);
 			bucket->size--;
 		}
@@ -170,6 +188,8 @@ void tg_hashtable_free(tg_hashtable *hashtable)
 		assert(!bucket->size);
 
 		RB_INIT(&bucket->rbtree);
+
+		bucket->magic = 0;
 
 		assert(!pthread_rwlock_unlock(&bucket->rwlock));
 
@@ -182,6 +202,8 @@ void tg_hashtable_free(tg_hashtable *hashtable)
 		hashtable->bucket_len = 0;
 		hashtable->buckets = NULL;
 	}
+
+	hashtable->magic = 0;
 
 	free(hashtable);
 }

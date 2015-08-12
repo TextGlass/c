@@ -10,6 +10,9 @@
 
 typedef struct tg_hashtable_key
 {
+	unsigned int			magic;
+#define	TG_HASHTABLE_KEY_MAGIC		0x4D2FA1FF
+
 	RB_ENTRY(tg_hashtable_key)	entry;
 
 	const char			*key;
@@ -21,6 +24,9 @@ typedef RB_HEAD(tg_hashtable_rbtree, tg_hashtable_key) tg_hashtable_rbtree;
 
 typedef struct
 {
+	unsigned int			magic;
+#define	TG_HASHTABLE_BUCKET_MAGIC	0xA11FB208
+
 	tg_hashtable_rbtree		rbtree;
 
 	pthread_rwlock_t		rwlock;
@@ -31,6 +37,9 @@ tg_hashtable_bucket;
 
 typedef struct
 {
+	unsigned int			magic;
+#define	TG_HASHTABLE_MAGIC		0x815BDDAB
+
 	tg_hashtable_bucket		*buckets;
 
 	size_t				bucket_len;
