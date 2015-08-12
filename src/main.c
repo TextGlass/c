@@ -5,14 +5,14 @@
 
 static void printHelp()
 {
-	printf("Usage: textglass_client [OPTIONS]\n");
-	printf("  -p <file>            load TextGlass pattern file (REQUIRED)\n");
-	printf("  -a <file>            load TextGlass attribute file\n");
-	printf("  -q <file>            load TextGlass pattern patch file\n");
-	printf("  -b <file>            load TextGlass attribute patch file\n");
-	printf("  -t <file>            load TextGlass test file\n");
-	printf("  -h                   print help\n");
-	printf("  -u <string>          test string\n");
+	tg_printd(0, "Usage: textglass_client [OPTIONS]\n");
+	tg_printd(0, "  -p <file>            load TextGlass pattern file (REQUIRED)\n");
+	tg_printd(0, "  -a <file>            load TextGlass attribute file\n");
+	tg_printd(0, "  -q <file>            load TextGlass pattern patch file\n");
+	tg_printd(0, "  -b <file>            load TextGlass attribute patch file\n");
+	tg_printd(0, "  -t <file>            load TextGlass test file\n");
+	tg_printd(0, "  -h                   print help\n");
+	tg_printd(0, "  -u <string>          test string\n");
 }
 
 int main(int argc, char **argv)
@@ -30,8 +30,9 @@ int main(int argc, char **argv)
 	tg_jsonfile *attribute_patch_file = NULL;
 	tg_jsonfile *test_file;
 	int c, exit = 0;
+	struct timespec start, end, diff;
 
-	printf("TextGlass C Client %s\n", TEXTGLASS_VERSION);
+	tg_printd(0, "TextGlass C Client %s\n", TEXTGLASS_VERSION);
 
 	tests = tg_list_init();
 
@@ -87,6 +88,8 @@ int main(int argc, char **argv)
 		goto mdone;
 	}
 
+	clock_gettime(CLOCK_REALTIME, &start);
+
 	//PARSE PATTERN FILE
 
 	tg_printd(1, "Pattern file: %s\n", pattern);
@@ -139,6 +142,14 @@ int main(int argc, char **argv)
 			goto mdone;
 		}
 	}
+	
+	clock_gettime(CLOCK_REALTIME, &end);
+	tg_time_diff(&end, &start, &diff);
+
+	tg_printd(0, "Domain load time: %lds %ldms %ld.%ldus\n",
+           diff.tv_sec, diff.tv_nsec/1000000, diff.tv_nsec/1000%1000, diff.tv_nsec%1000);
+
+	//BUILD THE CLIENT
 
 	//DO THE TESTS
 

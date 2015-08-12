@@ -27,3 +27,15 @@ void tg_printd(int level, const char* fmt,...)
 	}
 #endif
 }
+
+void tg_time_diff(struct timespec *end, struct timespec *start, struct timespec *result)
+{
+    result->tv_sec = end->tv_sec - start->tv_sec;
+    result->tv_nsec = end->tv_nsec - start->tv_nsec;
+
+    if(result->tv_nsec < 0)
+    {
+      result->tv_sec--;
+      result->tv_nsec += (1000 * 1000 * 1000);
+    }
+}

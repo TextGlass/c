@@ -7,6 +7,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "jsmn.h"
 
@@ -34,6 +35,7 @@ tg_jsonfile;
 extern int tg_printd_debug_level;
 
 void tg_printd(int level, const char* fmt,...);
+void tg_time_diff(struct timespec *end, struct timespec *start, struct timespec *result);
 
 tg_jsonfile *tg_jsonfile_get(char *file);
 void tg_jsonfile_free(tg_jsonfile *jsonfile);
