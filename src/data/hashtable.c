@@ -118,12 +118,22 @@ void tg_hashtable_set(tg_hashtable *hashtable, const char *key, const void *valu
 
 	if (ret)
 	{
+		if(hashtable->callback)
+		{
+			hashtable->callback((void*)ret->value);
+		}
+
+		add->magic = 0;
+		free(add);
+
 		assert(ret->magic == TG_HASHTABLE_KEY_MAGIC);
 		ret->key = key;
 		ret->value = value;
 	}
-
-	bucket->size++;
+	else
+	{
+		bucket->size++;
+	}
 
 	assert(!pthread_rwlock_unlock(&bucket->rwlock));
 }

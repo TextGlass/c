@@ -186,6 +186,8 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		count = 100;
 	}
 
+	//TODO this needs to be a list of patterns
+	
 	domain->patterns = tg_hashtable_init(count, &tg_pattern_free);
 
 	tg_printd(3, "Pattern hash size: %zu\n", count);
