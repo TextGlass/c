@@ -4,7 +4,7 @@ static int tg_hashtable_cmp(const tg_hashtable_key *k1, const tg_hashtable_key *
 
 RB_GENERATE(tg_hashtable_rbtree, tg_hashtable_key, entry, tg_hashtable_cmp);
 
-tg_hashtable *tg_hashtable_init(size_t buckets)
+tg_hashtable *tg_hashtable_init(size_t buckets, void (*callback)(void*))
 {
 	tg_hashtable *hashtable;
 	tg_hashtable_bucket *bucket;
@@ -12,15 +12,15 @@ tg_hashtable *tg_hashtable_init(size_t buckets)
 
 	assert(buckets > 0);
 
-	hashtable = malloc(sizeof (tg_hashtable));
+	hashtable = malloc(sizeof(tg_hashtable));
 
 	assert(hashtable);
 
 	hashtable->magic = TG_HASHTABLE_MAGIC;
-
 	hashtable->bucket_len = buckets;
+	hashtable->callback = callback;
 
-	hashtable->buckets = malloc(hashtable->bucket_len * sizeof (tg_hashtable_bucket));
+	hashtable->buckets = malloc(hashtable->bucket_len * sizeof(tg_hashtable_bucket));
 
 	assert(hashtable->buckets);
 
@@ -105,7 +105,7 @@ void tg_hashtable_set(tg_hashtable *hashtable, const char *key, const void *valu
 
 	assert(!pthread_rwlock_wrlock(&bucket->rwlock));
 
-	add = malloc(sizeof (tg_hashtable_key));
+	add = malloc(sizeof(tg_hashtable_key));
 
 	assert(add);
 
@@ -181,9 +181,18 @@ void tg_hashtable_free(tg_hashtable *hashtable)
 		RB_FOREACH_SAFE(key, tg_hashtable_rbtree, &bucket->rbtree, next)
 		{
 			RB_REMOVE(tg_hashtable_rbtree, &bucket->rbtree, key);
+
 			assert(key->magic == TG_HASHTABLE_KEY_MAGIC);
+			
+			if(hashtable->callback)
+			{
+				hashtable->callback((void*)key->value);
+			}
+
 			key->magic = 0;
+
 			free(key);
+
 			bucket->size--;
 		}
 

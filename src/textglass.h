@@ -11,6 +11,7 @@
 
 #include "list.h"
 #include "jsmn.h"
+#include "data/hashtable.h"
 
 
 #define TEXTGLASS_VERSION		"1.0.0"
@@ -52,8 +53,42 @@ typedef struct
 	int			token_seperator_len;
 
 	const char		*default_id;
+
+	tg_hashtable		*patterns;
 }
 tg_domain;
+
+typedef enum
+{
+	TG_RANKTYPE_NONE =0,
+	TG_RANKTYPE_WEAK = 1,
+	TG_RANKTYPE_STRONG = 2
+}
+tg_rank_type;
+
+typedef enum
+{
+	TG_PATTERN_SIMPLE = 0,
+	TG_PATTERN_AND = 1,
+	TG_PATTERN_ORDERED_AND = 2
+}
+tg_pattern_type;
+
+typedef struct
+{
+	unsigned int		magic;
+#define TG_PATTERN_MAGIC	0x8BE15F7A
+
+	const char		*pattern_id;
+
+	tg_rank_type		rank_type;
+	int			rank_value;
+
+	tg_pattern_type		pattern_type;
+	
+	char			**pattern_tokens;
+}
+tg_pattern;
 
 
 extern int tg_printd_debug_level;
@@ -79,7 +114,13 @@ jsmntok_t *tg_json_array_get(jsmntok_t *tokens, int index);
 tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 		const char *pattern_patch, const char *attribute_patch);
 void tg_domain_free(tg_domain *domain);
+
+
 void tg_classify(tg_domain *domain, const char *original);
+
+
+tg_pattern *tg_pattern_create(jsmntok_t *tokens);
+void tg_pattern_free(void *obj);
 
 
 #endif	/* _TEXTGLASS_H_INCLUDED_ */

@@ -83,11 +83,13 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 {
 	tg_domain *domain;
 	jsmntok_t *token, *tokens, *norm, *patch;
+	tg_pattern *pattern_obj;
 	int i;
+	size_t count;
 
 	assert(pattern);
 
-	domain = calloc(1, sizeof (tg_domain));
+	domain = calloc(1, sizeof(tg_domain));
 
 	assert(domain);
 
@@ -123,7 +125,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	if(TG_JSON_IS_ARRAY(tokens))
 	{
 		domain->token_seperator_len = tokens->size;
-		domain->token_seperators = malloc(sizeof (char*) * domain->token_seperator_len);
+		domain->token_seperators = malloc(sizeof(char*) * domain->token_seperator_len);
 
 		assert(domain->token_seperators);
 
@@ -134,6 +136,8 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 			
 			tg_printd(2, "Found tokenSeperators: '%s'\n", token->str);
 		}
+
+		tg_printd(1, "Found %d tokenSeperator(s)\n", domain->token_seperator_len);
 	}
 
 	//DEFAULT PATTERN ID
@@ -165,13 +169,45 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	//PATTERN INDEX
 
+	count = 0;
+
+	if(TG_JSON_IS_ARRAY(norm))
+	{
+		count += norm[0].size;
+	}
+
+	if(TG_JSON_IS_ARRAY(patch))
+	{
+		count += patch[0].size;
+	}
+
+	if(count < 100)
+	{
+		count = 100;
+	}
+
+	domain->patterns = tg_hashtable_init(count, &tg_pattern_free);
+
+	tg_printd(3, "Pattern hash size: %zu\n", count);
+
+	count = 0;
+
 	if(TG_JSON_IS_ARRAY(norm))
 	{
 		for(i = 1; i < norm[0].skip; i++)
 		{
 			tokens = &norm[i];
 
-			tg_printd(3, "Found patternId: %s\n", tg_json_get_str(tokens, "patternId"));
+			pattern_obj = tg_pattern_create(tokens);
+
+			if(!pattern_obj)
+			{
+				goto derror;
+			}
+
+			tg_hashtable_set(domain->patterns, pattern_obj->pattern_id, pattern_obj);
+
+			count++;
 
 			i+= norm[i].skip;
 		}
@@ -183,11 +219,22 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		{
 			tokens = &patch[i];
 
-			tg_printd(3, "Found patternId: %s\n", tg_json_get_str(tokens, "patternId"));
+			pattern_obj = tg_pattern_create(tokens);
+
+			if(!pattern_obj)
+			{
+				goto derror;
+			}
+
+			tg_hashtable_set(domain->patterns, pattern_obj->pattern_id, pattern_obj);
+
+			count++;
 
 			i+= patch[i].skip;
 		}
 	}
+
+	tg_printd(1, "Found %zu pattern(s)\n", count);
 
 	tg_jsonfile_free_tokens(domain->pattern);
 	tg_jsonfile_free_tokens(domain->attribute);
@@ -195,39 +242,11 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	tg_jsonfile_free_tokens(domain->attribute_patch);
 
 	return domain;
-/*
+
 derror:
 	tg_domain_free(domain);
 
 	return NULL;
- */
-}
-
-void tg_classify(tg_domain *domain, const char *original)
-{
-	char *input;
-	size_t length;
-	tg_list *tokens;
-	tg_list_item *item;
-
-	input = strdup(original);
-	length = strlen(input);
-
-	tg_printd(2, "classify input on %s: '%s':%zu\n", domain->domain, input, length);
-
-	//TOKEN SEPERATORS
-
-	tokens = tg_list_init(15);
-
-	tg_split(input, length, domain->token_seperators, domain->token_seperator_len, tokens);
-
-	tg_list_foreach(tokens, item)
-	{
-		tg_printd(3, "classify tokens: '%s'\n", (char*)item->value);
-	}
-
-	tg_list_free(tokens);
-	free(input);
 }
 
 void tg_domain_free(tg_domain *domain)
@@ -254,6 +273,8 @@ void tg_domain_free(tg_domain *domain)
 		free(domain->token_seperators);
 		domain->token_seperator_len = 0;
 	}
+
+	tg_hashtable_free(domain->patterns);
 
 	domain->magic = 0;
 

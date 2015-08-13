@@ -43,10 +43,12 @@ typedef struct
 	tg_hashtable_bucket		*buckets;
 
 	size_t				bucket_len;
+
+	void				(*callback)(void*);
 }
 tg_hashtable;
 
-tg_hashtable *tg_hashtable_init(size_t buckets);
+tg_hashtable *tg_hashtable_init(size_t buckets, void (*callback)(void*));
 const void *tg_hashtable_get(tg_hashtable *hashtable, const char *key);
 void tg_hashtable_set(tg_hashtable *hashtable, const char *key, const void *value);
 int tg_hashtable_delete(tg_hashtable *hashtable, const char *key);

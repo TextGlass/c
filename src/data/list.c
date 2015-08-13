@@ -4,7 +4,7 @@ tg_list *tg_list_init(size_t len)
 {
 	tg_list *list;
 
-	list = calloc(1, sizeof (tg_list) + (sizeof (tg_list_item) * len));
+	list = calloc(1, sizeof(tg_list) + (sizeof(tg_list_item) * len));
 
 	assert(list);
 
@@ -37,7 +37,7 @@ static tg_list_item *tg_list_item_alloc(tg_list *list)
 		}
 	}
 
-	item = malloc(sizeof (tg_list_item));
+	item = malloc(sizeof(tg_list_item));
 
 	assert(item);
 

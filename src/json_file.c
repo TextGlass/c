@@ -11,7 +11,7 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 
 	assert(file);
 
-	jsonfile = calloc(1, sizeof (tg_jsonfile));
+	jsonfile = calloc(1, sizeof(tg_jsonfile));
 
 	assert(jsonfile);
 
@@ -62,7 +62,7 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 		goto jerror;
 	}
 
-	jsonfile->tokens = malloc(sizeof (jsmntok_t) * jsonfile->token_len);
+	jsonfile->tokens = malloc(sizeof(jsmntok_t) * jsonfile->token_len);
 
 	assert(jsonfile->tokens);
 
