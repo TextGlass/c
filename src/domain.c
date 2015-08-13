@@ -1,8 +1,8 @@
 #include "textglass.h"
-#include "list.h"
 
 static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch);
+static tg_list *tg_list_get(tg_domain *domain, void (*free)(void *item));
 
 tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 		const char *pattern_patch, const char *attribute_patch)
@@ -181,15 +181,24 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	{
 		count += patch[0].size;
 	}
-
-	if(count < 100)
-	{
-		count = 100;
-	}
 	
-	domain->patterns = tg_hashtable_init(count, (TG_FREE)&tg_list_free);
+	domain->patterns = tg_hashtable_init(count + 100, (TG_FREE)&tg_list_free);
 
 	tg_printd(3, "Pattern hash size: %zu\n", count);
+
+	domain->pattern_slab_size = count;
+	domain->pattern_slab_pos = 0;
+
+	domain->pattern_slab = calloc(domain->pattern_slab_size, sizeof(tg_pattern));
+
+	assert(domain->pattern_slab);
+
+	domain->list_slab_size = count;
+	domain->list_slab_pos = 0;
+
+	domain->list_slab = calloc(domain->list_slab_size, sizeof(tg_list));
+
+	assert(domain->list_slab);
 
 	count = 0;
 
@@ -199,7 +208,9 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		{
 			tokens = &norm[i];
 
-			pattern_obj = tg_pattern_create(tokens);
+			pattern_obj = tg_pattern_get(domain);
+
+			pattern_obj = tg_pattern_create(pattern_obj, tokens);
 
 			if(!pattern_obj)
 			{
@@ -210,7 +221,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 			if(!list)
 			{
-				list = tg_list_init(2, (TG_FREE)&tg_pattern_free);
+				list = tg_list_get(domain, (TG_FREE)&tg_pattern_free);
 				tg_hashtable_set(domain->patterns, pattern_obj->pattern_id, list);
 			}
 
@@ -228,7 +239,9 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		{
 			tokens = &patch[i];
 
-			pattern_obj = tg_pattern_create(tokens);
+			pattern_obj = tg_pattern_get(domain);
+
+			pattern_obj = tg_pattern_create(pattern_obj, tokens);
 
 			if(!pattern_obj)
 			{
@@ -239,7 +252,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 			if(!list)
 			{
-				list = tg_list_init(2, (TG_FREE)&tg_pattern_free);
+				list = tg_list_get(domain, (TG_FREE)&tg_pattern_free);
 				tg_hashtable_set(domain->patterns, pattern_obj->pattern_id, list);
 			}
 
@@ -274,6 +287,24 @@ void tg_domain_free(tg_domain *domain)
 	}
 
 	assert(domain->magic == TG_DOMAIN_MAGIC);
+
+	tg_hashtable_free(domain->patterns);
+
+	if(domain->list_slab)
+	{
+		free(domain->list_slab);
+	}
+
+	if(domain->pattern_slab)
+	{
+		free(domain->pattern_slab);
+	}
+
+	if(domain->token_seperators)
+	{
+		free(domain->token_seperators);
+		domain->token_seperator_len = 0;
+	}
 	
 	tg_jsonfile_free(domain->pattern);
 	tg_jsonfile_free(domain->attribute);
@@ -285,15 +316,35 @@ void tg_domain_free(tg_domain *domain)
 	domain->pattern_patch = NULL;
 	domain->attribute_patch = NULL;
 
-	if(domain->token_seperators)
-	{
-		free(domain->token_seperators);
-		domain->token_seperator_len = 0;
-	}
-
-	tg_hashtable_free(domain->patterns);
-
 	domain->magic = 0;
 
 	free(domain);
+}
+
+static tg_list *tg_list_get(tg_domain *domain, void (*free)(void *item))
+{
+	tg_list *list;
+
+	assert(domain);
+
+	if(domain->list_slab_pos >= domain->list_slab_size)
+	{
+		return tg_list_init(0, free);
+	}
+
+	list = &domain->list_slab[domain->list_slab_pos];
+
+	list->magic = TG_LIST_MAGIC;
+	list->size = 0;
+	list->prealloc_len = TG_LIST_PREALLOC;
+	list->callback = free;
+	list->malloc = 0;
+
+	TAILQ_INIT(&list->head);
+
+	assert(!pthread_rwlock_init(&list->rwlock, NULL));
+
+	domain->list_slab_pos++;
+
+	return list;
 }

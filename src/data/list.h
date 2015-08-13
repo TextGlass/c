@@ -7,6 +7,8 @@
 
 #include "queue.h"
 
+#define TG_LIST_PREALLOC			2
+
 typedef struct tg_list_item
 {
 	unsigned int			magic;
@@ -36,7 +38,9 @@ typedef struct
 	size_t				size;
 	size_t				prealloc_len;
 
-	tg_list_item			prealloc[0];
+	int				malloc:1;
+
+	tg_list_item			prealloc[TG_LIST_PREALLOC];
 }
 tg_list;
 

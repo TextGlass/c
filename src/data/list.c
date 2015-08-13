@@ -4,14 +4,24 @@ tg_list *tg_list_init(size_t initial_len, void (*free)(void *item))
 {
 	tg_list *list;
 
+	if(initial_len > TG_LIST_PREALLOC)
+	{
+		initial_len -= TG_LIST_PREALLOC;
+	}
+	else
+	{
+		initial_len = 0;
+	}
+
 	list = calloc(1, sizeof(tg_list) + (sizeof(tg_list_item) * initial_len));
 
 	assert(list);
 
 	list->magic = TG_LIST_MAGIC;
 	list->size = 0;
-	list->prealloc_len = initial_len;
+	list->prealloc_len = TG_LIST_PREALLOC + initial_len;
 	list->callback = free;
+	list->malloc = 1;
 
 	TAILQ_INIT(&list->head);
 
@@ -140,5 +150,8 @@ void tg_list_free(tg_list *list)
 
 	assert(!pthread_rwlock_destroy(&list->rwlock));
 
-	free(list);
+	if(list->malloc)
+	{
+		free(list);
+	}
 }

@@ -1,15 +1,45 @@
 #include "textglass.h"
 
-tg_pattern *tg_pattern_create(jsmntok_t *tokens)
+tg_pattern *tg_pattern_alloc()
 {
 	tg_pattern *pattern;
-	const char *value;
 
 	pattern = malloc(sizeof(tg_pattern));
 
 	assert(pattern);
 
 	pattern->magic = TG_PATTERN_MAGIC;
+	pattern->malloc = 1;
+
+	return pattern;
+}
+
+tg_pattern *tg_pattern_get(tg_domain *domain)
+{
+	tg_pattern *pattern;
+
+	assert(domain);
+
+	if(domain->pattern_slab_pos >= domain->pattern_slab_size)
+	{
+		return tg_pattern_alloc();
+	}
+
+	pattern = &domain->pattern_slab[domain->pattern_slab_pos];
+
+	pattern->magic = TG_PATTERN_MAGIC;
+	pattern->malloc = 0;
+
+	domain->pattern_slab_pos++;
+
+	return pattern;
+}
+
+tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
+{
+	const char *value;
+
+	assert(pattern && pattern->magic == TG_PATTERN_MAGIC);
 
 	//PATTERN ID
 
@@ -105,5 +135,8 @@ void tg_pattern_free(tg_pattern *pattern)
 
 	pattern->magic = 0;
 
-	free(pattern);
+	if(pattern->malloc)
+	{
+		free(pattern);
+	}
 }

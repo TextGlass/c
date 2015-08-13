@@ -36,28 +36,6 @@ typedef struct
 }
 tg_jsonfile;
 
-typedef struct
-{
-	unsigned int		magic;
-#define TG_DOMAIN_MAGIC		0x4C3A041E
-
-	tg_jsonfile		*pattern;
-	tg_jsonfile		*attribute;
-	tg_jsonfile		*pattern_patch;
-	tg_jsonfile		*attribute_patch;
-
-	const char		*domain;
-	const char		*domain_version;
-
-	const char		**token_seperators;
-	int			token_seperator_len;
-
-	const char		*default_id;
-
-	tg_hashtable		*patterns;
-}
-tg_domain;
-
 typedef enum
 {
 	TG_RANKTYPE_NONE =0,
@@ -85,10 +63,42 @@ typedef struct
 	int			rank_value;
 
 	tg_pattern_type		pattern_type;
-	
+
 	char			**pattern_tokens;
+
+	int			malloc:1;
 }
 tg_pattern;
+
+typedef struct
+{
+	unsigned int		magic;
+#define TG_DOMAIN_MAGIC		0x4C3A041E
+
+	tg_jsonfile		*pattern;
+	tg_jsonfile		*attribute;
+	tg_jsonfile		*pattern_patch;
+	tg_jsonfile		*attribute_patch;
+
+	const char		*domain;
+	const char		*domain_version;
+
+	const char		**token_seperators;
+	int			token_seperator_len;
+
+	const char		*default_id;
+
+	tg_list			*list_slab;
+	size_t			list_slab_size;
+	size_t			list_slab_pos;
+
+	tg_pattern		*pattern_slab;
+	size_t			pattern_slab_size;
+	size_t			pattern_slab_pos;
+
+	tg_hashtable		*patterns;
+}
+tg_domain;
 
 
 #define TG_FREE				void (*)(void*)
@@ -122,7 +132,9 @@ void tg_domain_free(tg_domain *domain);
 void tg_classify(tg_domain *domain, const char *original);
 
 
-tg_pattern *tg_pattern_create(jsmntok_t *tokens);
+tg_pattern *tg_pattern_alloc();
+tg_pattern *tg_pattern_get(tg_domain *domain);
+tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens);
 void tg_pattern_free(tg_pattern *pattern);
 
 

@@ -8,7 +8,7 @@
 
 #include "tree.h"
 
-#define TG_HASHTABLE_PREALLOC_LEN		1
+#define TG_HASHTABLE_PREALLOC_LEN		2
 
 typedef struct tg_hashtable_key
 {
