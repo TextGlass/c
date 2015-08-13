@@ -1,5 +1,4 @@
 #include "textglass.h"
-#include "list.h"
 
 #include <unistd.h>
 

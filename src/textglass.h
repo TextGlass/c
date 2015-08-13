@@ -10,8 +10,8 @@
 #include <time.h>
 
 #include "list.h"
+#include "hashtable.h"
 #include "jsmn.h"
-#include "data/hashtable.h"
 
 
 #define TEXTGLASS_VERSION		"1.0.0"
