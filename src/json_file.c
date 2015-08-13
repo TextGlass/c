@@ -91,7 +91,7 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 		}
 	}
 
-	token = tg_json_get(jsonfile, jsonfile->tokens, "TextGlassSpecVersion");
+	token = tg_json_get(jsonfile->tokens, "TextGlassSpecVersion");
 
 	if(!token || strcmp(token->str, "1.0"))
 	{
@@ -99,9 +99,9 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 		goto jerror;
 	}
 
-	jsonfile->type = tg_json_get_str(jsonfile, jsonfile->tokens, "type");
-	jsonfile->domain = tg_json_get_str(jsonfile, jsonfile->tokens, "domain");
-	jsonfile->domain_version = tg_json_get_str(jsonfile, jsonfile->tokens, "domainVersion");
+	jsonfile->type = tg_json_get_str(jsonfile->tokens, "type");
+	jsonfile->domain = tg_json_get_str(jsonfile->tokens, "domain");
+	jsonfile->domain_version = tg_json_get_str(jsonfile->tokens, "domainVersion");
 
 	if(!jsonfile->type || !jsonfile->domain || !jsonfile->domain_version)
 	{
@@ -165,18 +165,14 @@ void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile)
 	}
 }
 
-jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field)
+jsmntok_t *tg_json_get(jsmntok_t *tokens, const char *field)
 {
 	int i;
 
-	if(!jsonfile || !tokens)
+	if(!tokens || !TG_JSON_IS_OBJECT(tokens))
 	{
 		return NULL;
 	}
-
-	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
-
-	assert(TG_JSON_IS_OBJECT(tokens));
 
 	for(i = 1; i < tokens[0].skip; i++)
 	{
@@ -192,9 +188,9 @@ jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *fie
 	return NULL;
 }
 
-const char *tg_json_get_str(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field)
+const char *tg_json_get_str(jsmntok_t *tokens, const char *field)
 {
-	jsmntok_t *token = tg_json_get(jsonfile, tokens, field);
+	jsmntok_t *token = tg_json_get(tokens, field);
 
 	if(!token)
 	{
@@ -206,18 +202,14 @@ const char *tg_json_get_str(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char
 	}
 }
 
-jsmntok_t *tg_json_array_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, int index)
+jsmntok_t *tg_json_array_get(jsmntok_t *tokens, int index)
 {
 	int i;
 
-	if(!jsonfile || !tokens)
+	if(!tokens || !TG_JSON_IS_ARRAY(tokens))
 	{
 		return NULL;
 	}
-
-	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
-
-	assert(TG_JSON_IS_ARRAY(tokens));
 
 	for(i = 1; i < tokens[0].skip; i++, index--)
 	{

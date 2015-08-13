@@ -163,10 +163,13 @@ static void tg_printHelp()
 	tg_printd(0, "Usage: textglass_client [OPTIONS]\n");
 	tg_printd(0, "  -p <file>            load TextGlass pattern file (REQUIRED)\n");
 	tg_printd(0, "  -a <file>            load TextGlass attribute file\n");
-	tg_printd(0, "  -q <file>            load TextGlass pattern patch file\n");
+	tg_printd(0, "  -s <file>            load TextGlass pattern patch file\n");
 	tg_printd(0, "  -b <file>            load TextGlass attribute patch file\n");
 	tg_printd(0, "  -t <file>            load TextGlass test file\n");
 	tg_printd(0, "  -h                   print help\n");
+	tg_printd(0, "  -q                   quiet\n");
+	tg_printd(0, "  -v                   verbose\n");
+	tg_printd(0, "  -w                   very verbose\n");
 	tg_printd(0, "  -u <string>          test string\n");
 }
 
@@ -184,15 +187,15 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 		return 1;
 	}
 
-	tests = tg_json_get(test_file, test_file->tokens, "tests");
+	tests = tg_json_get(test_file->tokens, "tests");
 
 	if(TG_JSON_IS_ARRAY(tests))
 	{
 		for(i = 0; i < tests->size; i++)
 		{
-			test = tg_json_array_get(test_file, tests, i);
+			test = tg_json_array_get(tests, i);
 			
-			input = tg_json_get_str(test_file, test, "input");
+			input = tg_json_get_str(test, "input");
 
 			if(input)
 			{

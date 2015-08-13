@@ -50,6 +50,8 @@ typedef struct
 
 	const char		**token_seperators;
 	int			token_seperator_len;
+
+	const char		*default_id;
 }
 tg_domain;
 
@@ -64,9 +66,9 @@ void tg_split(char *source, size_t source_len, const char **seps, int sep_length
 tg_jsonfile *tg_jsonfile_get(const char *file);
 void tg_jsonfile_free(tg_jsonfile *jsonfile);
 void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile);
-jsmntok_t *tg_json_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field);
-const char *tg_json_get_str(tg_jsonfile *jsonfile, jsmntok_t *tokens, const char *field);
-jsmntok_t *tg_json_array_get(tg_jsonfile *jsonfile, jsmntok_t *tokens, int index);
+jsmntok_t *tg_json_get(jsmntok_t *tokens, const char *field);
+const char *tg_json_get_str(jsmntok_t *tokens, const char *field);
+jsmntok_t *tg_json_array_get(jsmntok_t *tokens, int index);
 
 #define TG_JSON_IS_OBJECT(token)		((token) && (token)->type == JSMN_OBJECT)
 #define TG_JSON_IS_STRING(token)		((token) && (token)->type == JSMN_STRING)

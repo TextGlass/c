@@ -24,13 +24,16 @@ static tg_list_item *tg_list_item_alloc(tg_list *list)
 	tg_list_item *item;
 	int i;
 
-	for(i = 0; i < list->prealloc_len; i++)
+	if(list->prealloc_len && !list->prealloc[list->prealloc_len - 1].magic)
 	{
-		item = &list->prealloc[i];
-		if(!item->magic)
+		for(i = 0; i < list->prealloc_len; i++)
 		{
-			item->magic = TG_LIST_ITEM_MAGIC;
-			return item;
+			item = &list->prealloc[i];
+			if(!item->magic)
+			{
+				item->magic = TG_LIST_ITEM_MAGIC;
+				return item;
+			}
 		}
 	}
 

@@ -103,21 +103,21 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	//LOAD THE INPUT PARSERS
 
-	norm = tg_json_get(domain->pattern, domain->pattern->tokens, "inputParser");
+	norm = tg_json_get(domain->pattern->tokens, "inputParser");
 	patch = NULL;
 
 	if(domain->pattern_patch)
 	{
-		patch = tg_json_get(domain->pattern_patch, domain->pattern_patch->tokens, "inputParser");
+		patch = tg_json_get(domain->pattern_patch->tokens, "inputParser");
 	}
 
 	//TOKEN SEPERATORS
 
-	tokens = tg_json_get(domain->pattern_patch, patch, "tokenSeperators");
+	tokens = tg_json_get(patch, "tokenSeperators");
 
 	if(!TG_JSON_IS_ARRAY(tokens))
 	{
-		tokens = tg_json_get(domain->pattern, norm, "tokenSeperators");
+		tokens = tg_json_get(norm, "tokenSeperators");
 	}
 
 	if(TG_JSON_IS_ARRAY(tokens))
@@ -133,6 +133,59 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 			domain->token_seperators[i] = token->str;
 			
 			tg_printd(2, "Found tokenSeperators: '%s'\n", token->str);
+		}
+	}
+
+	//DEFAULT PATTERN ID
+
+	patch = NULL;
+
+	if(domain->pattern_patch)
+	{
+		patch = tg_json_get(domain->pattern_patch->tokens, "patternSet");
+
+		domain->default_id = tg_json_get_str(patch, "defaultId");
+
+		patch = tg_json_get(patch, "patterns");
+	}
+
+	norm = tg_json_get(domain->pattern->tokens, "patternSet");
+
+	if(!domain->default_id)
+	{
+		domain->default_id = tg_json_get_str(norm, "defaultId");
+	}
+
+	norm = tg_json_get(norm, "patterns");
+
+	if(domain->default_id)
+	{
+		tg_printd(2, "Found defaultId: %s\n", domain->default_id);
+	}
+
+	//PATTERN INDEX
+
+	if(TG_JSON_IS_ARRAY(norm))
+	{
+		for(i = 1; i < norm[0].skip; i++)
+		{
+			tokens = &norm[i];
+
+			tg_printd(3, "Found patternId: %s\n", tg_json_get_str(tokens, "patternId"));
+
+			i+= norm[i].skip;
+		}
+	}
+
+	if(TG_JSON_IS_ARRAY(patch))
+	{
+		for(i = 1; i < patch[0].skip; i++)
+		{
+			tokens = &patch[i];
+
+			tg_printd(3, "Found patternId: %s\n", tg_json_get_str(tokens, "patternId"));
+
+			i+= patch[i].skip;
 		}
 	}
 
