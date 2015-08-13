@@ -4,11 +4,11 @@ static int tg_hashtable_cmp(const tg_hashtable_key *k1, const tg_hashtable_key *
 
 RB_GENERATE(tg_hashtable_rbtree, tg_hashtable_key, entry, tg_hashtable_cmp);
 
-tg_hashtable *tg_hashtable_init(size_t buckets, void (*callback)(void*))
+tg_hashtable *tg_hashtable_init(size_t buckets, void (*free)(void *value))
 {
 	tg_hashtable *hashtable;
 	tg_hashtable_bucket *bucket;
-	size_t i;
+	size_t i, j;
 
 	assert(buckets > 0);
 
@@ -18,7 +18,7 @@ tg_hashtable *tg_hashtable_init(size_t buckets, void (*callback)(void*))
 
 	hashtable->magic = TG_HASHTABLE_MAGIC;
 	hashtable->bucket_len = buckets;
-	hashtable->callback = callback;
+	hashtable->callback = free;
 
 	hashtable->buckets = malloc(hashtable->bucket_len * sizeof(tg_hashtable_bucket));
 
@@ -29,12 +29,18 @@ tg_hashtable *tg_hashtable_init(size_t buckets, void (*callback)(void*))
 		bucket = &(hashtable->buckets[i]);
 
 		bucket->magic = TG_HASHTABLE_BUCKET_MAGIC;
+		bucket->prealloc_len = TG_HASHTABLE_PREALLOC_LEN;
 
 		RB_INIT(&bucket->rbtree);
 
 		bucket->size = 0;
 
 		assert(!pthread_rwlock_init(&bucket->rwlock, NULL));
+
+		for(j = 0; j < bucket->prealloc_len; j++)
+		{
+			bucket->prealloc[j].magic = 0;
+		}
 	}
 
 	return hashtable;
@@ -60,11 +66,51 @@ static int tg_hashtable_cmp(const tg_hashtable_key *k1, const tg_hashtable_key *
 	return strcmp(k1->key, k2->key);
 }
 
-const void *tg_hashtable_get(tg_hashtable *hashtable, const char *key)
+static tg_hashtable_key *tg_hashtable_key_alloc(tg_hashtable_bucket *bucket)
+{
+	tg_hashtable_key *key;
+	int i;
+
+	for(i = 0; i < bucket->prealloc_len; i++)
+	{
+		key = &bucket->prealloc[i];
+
+		if(!key->magic)
+		{
+			key->magic = TG_HASHTABLE_KEY_MAGIC;
+			key->malloc = 0;
+
+			return key;
+		}
+	}
+
+	key = malloc(sizeof(tg_hashtable_key));
+
+	assert(key);
+
+	key->magic = TG_HASHTABLE_KEY_MAGIC;
+	key->malloc = 1;
+
+	return key;
+}
+
+static void tg_hashtable_key_free(tg_hashtable_key *key)
+{
+	assert(key && key->magic == TG_HASHTABLE_KEY_MAGIC);
+	
+	key->magic = 0;
+
+	if(key->malloc)
+	{
+		free(key);
+	}
+}
+
+void *tg_hashtable_get(tg_hashtable *hashtable, const char *key)
 {
 	tg_hashtable_bucket *bucket;
 	tg_hashtable_key *result, find;
-	const void *ret = NULL;
+	void *ret = NULL;
 
 	assert(hashtable && hashtable->magic == TG_HASHTABLE_MAGIC);
 	assert(key);
@@ -82,6 +128,7 @@ const void *tg_hashtable_get(tg_hashtable *hashtable, const char *key)
 	if(result)
 	{
 		assert(result->magic == TG_HASHTABLE_KEY_MAGIC);
+		
 		ret = result->value;
 	}
 
@@ -90,7 +137,7 @@ const void *tg_hashtable_get(tg_hashtable *hashtable, const char *key)
 	return ret;
 }
 
-void tg_hashtable_set(tg_hashtable *hashtable, const char *key, const void *value)
+void tg_hashtable_set(tg_hashtable *hashtable, const char *key, void *value)
 {
 	tg_hashtable_bucket *bucket;
 	tg_hashtable_key *add, *ret;
@@ -105,11 +152,7 @@ void tg_hashtable_set(tg_hashtable *hashtable, const char *key, const void *valu
 
 	assert(!pthread_rwlock_wrlock(&bucket->rwlock));
 
-	add = malloc(sizeof(tg_hashtable_key));
-
-	assert(add);
-
-	add->magic = TG_HASHTABLE_KEY_MAGIC;
+	add = tg_hashtable_key_alloc(bucket);
 
 	add->key = key;
 	add->value = value;
@@ -120,13 +163,13 @@ void tg_hashtable_set(tg_hashtable *hashtable, const char *key, const void *valu
 	{
 		if(hashtable->callback)
 		{
-			hashtable->callback((void*)ret->value);
+			hashtable->callback(ret->value);
 		}
 
-		add->magic = 0;
-		free(add);
+		tg_hashtable_key_free(add);
 
 		assert(ret->magic == TG_HASHTABLE_KEY_MAGIC);
+
 		ret->key = key;
 		ret->value = value;
 	}
@@ -160,10 +203,18 @@ int tg_hashtable_delete(tg_hashtable *hashtable, const char *key)
 	if (result)
 	{
 		assert(result->magic == TG_HASHTABLE_KEY_MAGIC);
+
 		RB_REMOVE(tg_hashtable_rbtree, &bucket->rbtree, result);
-		result->magic = 0;
-		free(result);
+
+		if(hashtable->callback)
+		{
+			hashtable->callback(result->value);
+		}
+
+		tg_hashtable_key_free(result);
+
 		bucket->size--;
+		
 		ret = 1;
 	}
 
@@ -196,12 +247,10 @@ void tg_hashtable_free(tg_hashtable *hashtable)
 			
 			if(hashtable->callback)
 			{
-				hashtable->callback((void*)key->value);
+				hashtable->callback(key->value);
 			}
 
-			key->magic = 0;
-
-			free(key);
+			tg_hashtable_key_free(key);
 
 			bucket->size--;
 		}
@@ -220,6 +269,7 @@ void tg_hashtable_free(tg_hashtable *hashtable)
 	if (hashtable->buckets)
 	{
 		free(hashtable->buckets);
+		
 		hashtable->bucket_len = 0;
 		hashtable->buckets = NULL;
 	}

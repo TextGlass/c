@@ -8,6 +8,8 @@
 
 #include "tree.h"
 
+#define TG_HASHTABLE_PREALLOC_LEN		1
+
 typedef struct tg_hashtable_key
 {
 	unsigned int			magic;
@@ -16,7 +18,9 @@ typedef struct tg_hashtable_key
 	RB_ENTRY(tg_hashtable_key)	entry;
 
 	const char			*key;
-	const void			*value;
+	void				*value;
+
+	int				malloc:1;
 }
 tg_hashtable_key;
 
@@ -32,6 +36,9 @@ typedef struct
 	pthread_rwlock_t		rwlock;
 
 	size_t				size;
+	size_t				prealloc_len;
+
+	tg_hashtable_key		prealloc[TG_HASHTABLE_PREALLOC_LEN];
 }
 tg_hashtable_bucket;
 
@@ -48,9 +55,9 @@ typedef struct
 }
 tg_hashtable;
 
-tg_hashtable *tg_hashtable_init(size_t buckets, void (*callback)(void*));
-const void *tg_hashtable_get(tg_hashtable *hashtable, const char *key);
-void tg_hashtable_set(tg_hashtable *hashtable, const char *key, const void *value);
+tg_hashtable *tg_hashtable_init(size_t buckets, void (*free)(void *value));
+void *tg_hashtable_get(tg_hashtable *hashtable, const char *key);
+void tg_hashtable_set(tg_hashtable *hashtable, const char *key, void *value);
 int tg_hashtable_delete(tg_hashtable *hashtable, const char *key);
 void tg_hashtable_free(tg_hashtable *hashtable);
 

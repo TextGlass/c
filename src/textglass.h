@@ -91,6 +91,9 @@ typedef struct
 tg_pattern;
 
 
+#define TG_FREE				void (*)(void*)
+
+
 extern int tg_printd_debug_level;
 
 void tg_printd(int level, const char* fmt,...);
@@ -105,10 +108,10 @@ jsmntok_t *tg_json_get(jsmntok_t *tokens, const char *field);
 const char *tg_json_get_str(jsmntok_t *tokens, const char *field);
 jsmntok_t *tg_json_array_get(jsmntok_t *tokens, int index);
 
-#define TG_JSON_IS_OBJECT(token)		((token) && (token)->type == JSMN_OBJECT)
-#define TG_JSON_IS_STRING(token)		((token) && (token)->type == JSMN_STRING)
-#define TG_JSON_IS_ARRAY(token)			((token) && (token)->type == JSMN_ARRAY)
-#define TG_JSON_IS_LITERAL(token)		((token) && (token)->type == JSMN_PRIMITIVE)
+#define TG_JSON_IS_OBJECT(token)	((token) && (token)->type == JSMN_OBJECT)
+#define TG_JSON_IS_STRING(token)	((token) && (token)->type == JSMN_STRING)
+#define TG_JSON_IS_ARRAY(token)		((token) && (token)->type == JSMN_ARRAY)
+#define TG_JSON_IS_LITERAL(token)	((token) && (token)->type == JSMN_PRIMITIVE)
 
 
 tg_domain *tg_domain_load(const char *pattern, const char *attribute,
@@ -120,7 +123,7 @@ void tg_classify(tg_domain *domain, const char *original);
 
 
 tg_pattern *tg_pattern_create(jsmntok_t *tokens);
-void tg_pattern_free(void *obj);
+void tg_pattern_free(tg_pattern *pattern);
 
 
 #endif	/* _TEXTGLASS_H_INCLUDED_ */

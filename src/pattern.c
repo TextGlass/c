@@ -99,10 +99,8 @@ perror:
 	return NULL;
 }
 
-void tg_pattern_free(void *obj)
+void tg_pattern_free(tg_pattern *pattern)
 {
-	tg_pattern *pattern = (tg_pattern*)obj;
-	
 	assert(pattern && pattern->magic == TG_PATTERN_MAGIC);
 
 	pattern->magic = 0;

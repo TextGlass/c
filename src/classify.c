@@ -14,7 +14,7 @@ void tg_classify(tg_domain *domain, const char *original)
 
 	//TOKEN SEPERATORS
 
-	tokens = tg_list_init(15);
+	tokens = tg_list_init(15, NULL);
 
 	tg_split(input, length, domain->token_seperators, domain->token_seperator_len, tokens);
 

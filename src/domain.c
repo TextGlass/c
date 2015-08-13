@@ -83,6 +83,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 {
 	tg_domain *domain;
 	jsmntok_t *token, *tokens, *norm, *patch;
+	tg_list *list;
 	tg_pattern *pattern_obj;
 	int i;
 	size_t count;
@@ -185,10 +186,8 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	{
 		count = 100;
 	}
-
-	//TODO this needs to be a list of patterns
 	
-	domain->patterns = tg_hashtable_init(count, &tg_pattern_free);
+	domain->patterns = tg_hashtable_init(count, (TG_FREE)&tg_list_free);
 
 	tg_printd(3, "Pattern hash size: %zu\n", count);
 
@@ -207,7 +206,15 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 				goto derror;
 			}
 
-			tg_hashtable_set(domain->patterns, pattern_obj->pattern_id, pattern_obj);
+			list = tg_hashtable_get(domain->patterns, pattern_obj->pattern_id);
+
+			if(!list)
+			{
+				list = tg_list_init(2, (TG_FREE)&tg_pattern_free);
+				tg_hashtable_set(domain->patterns, pattern_obj->pattern_id, list);
+			}
+
+			tg_list_add(list, pattern_obj);
 
 			count++;
 
@@ -228,7 +235,15 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 				goto derror;
 			}
 
-			tg_hashtable_set(domain->patterns, pattern_obj->pattern_id, pattern_obj);
+			list = tg_hashtable_get(domain->patterns, pattern_obj->pattern_id);
+
+			if(!list)
+			{
+				list = tg_list_init(2, (TG_FREE)&tg_pattern_free);
+				tg_hashtable_set(domain->patterns, pattern_obj->pattern_id, list);
+			}
+
+			tg_list_add(list, pattern_obj);
 
 			count++;
 

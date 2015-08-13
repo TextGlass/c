@@ -1,16 +1,17 @@
 #include "list.h"
 
-tg_list *tg_list_init(size_t len)
+tg_list *tg_list_init(size_t initial_len, void (*free)(void *item))
 {
 	tg_list *list;
 
-	list = calloc(1, sizeof(tg_list) + (sizeof(tg_list_item) * len));
+	list = calloc(1, sizeof(tg_list) + (sizeof(tg_list_item) * initial_len));
 
 	assert(list);
 
 	list->magic = TG_LIST_MAGIC;
 	list->size = 0;
-	list->prealloc_len = len;
+	list->prealloc_len = initial_len;
+	list->callback = free;
 
 	TAILQ_INIT(&list->head);
 
@@ -24,14 +25,18 @@ static tg_list_item *tg_list_item_alloc(tg_list *list)
 	tg_list_item *item;
 	int i;
 
-	if(list->prealloc_len && !list->prealloc[list->prealloc_len - 1].magic)
+	//if(list->prealloc_len && !list->prealloc[list->prealloc_len - 1].magic)
+	if(list->size < list->prealloc_len)
 	{
 		for(i = 0; i < list->prealloc_len; i++)
 		{
 			item = &list->prealloc[i];
+
 			if(!item->magic)
 			{
 				item->magic = TG_LIST_ITEM_MAGIC;
+				item->malloc = 0;
+
 				return item;
 			}
 		}
@@ -47,7 +52,7 @@ static tg_list_item *tg_list_item_alloc(tg_list *list)
 	return item;
 }
 
-void tg_list_add(tg_list *list, const void *value)
+void tg_list_add(tg_list *list, void *value)
 {
 	tg_list_item *add;
 
@@ -109,6 +114,11 @@ void tg_list_free(tg_list *list)
 		TAILQ_REMOVE(&list->head, item, entry);
 
 		assert(item->magic == TG_LIST_ITEM_MAGIC);
+
+		if(list->callback)
+		{
+			list->callback(item->value);
+		}
 
 		item->magic = 0;
 

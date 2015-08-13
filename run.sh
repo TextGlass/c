@@ -8,4 +8,4 @@ then
     exit 1
 fi
 
-$BINARY "$@"
+valgrind $BINARY "$@"
