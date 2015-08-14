@@ -5,7 +5,7 @@
 static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file);
 static void tg_printHelp();
 
-#define TG_MAIN_ERROR(msg) do {fprintf(stderr, "%s\n", msg); exit = 1; goto mdone; } while(0)
+#define TG_MAIN_ERROR(msg) do {fprintf(stderr, "%s", msg); exit = 1; goto mdone; } while(0)
 
 int main(int argc, char **argv)
 {
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 
 	tg_printd(0, "TextGlass C Client %s\n", TEXTGLASS_VERSION);
 
-	tests = tg_list_init(3, NULL);
+	tests = tg_list_alloc(3, NULL);
 
 	//PARSE THE COMMAND LINE
 
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 		{
 			if(pattern)
 			{
-				TG_MAIN_ERROR("pattern file already defined");
+				TG_MAIN_ERROR("pattern file already defined\n");
 			}
 			pattern = argv[++i];
 		}
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 		{
 			if(attribute)
 			{
-				TG_MAIN_ERROR("attribute file already defined");
+				TG_MAIN_ERROR("attribute file already defined\n");
 			}
 			attribute = argv[++i];
 		}
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 		{
 			if(pattern_patch)
 			{
-			      TG_MAIN_ERROR("pattern patch file already defined");
+			      TG_MAIN_ERROR("pattern patch file already defined\n");
 			}
 			pattern_patch = argv[++i];
 		}
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 		{
 			if(attribute_patch)
 			{
-				TG_MAIN_ERROR("attribute patch file already defined");
+				TG_MAIN_ERROR("attribute patch file already defined\n");
 			}
 			attribute_patch = argv[++i];
 		}

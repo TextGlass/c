@@ -9,7 +9,9 @@ tg_pattern *tg_pattern_alloc()
 	assert(pattern);
 
 	pattern->magic = TG_PATTERN_MAGIC;
+	pattern->pattern_token_init = 0;
 	pattern->malloc = 1;
+	pattern->ref_count = 0;
 
 	return pattern;
 }
@@ -18,7 +20,7 @@ tg_pattern *tg_pattern_get(tg_domain *domain)
 {
 	tg_pattern *pattern;
 
-	assert(domain);
+	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
 
 	if(domain->pattern_slab_pos >= domain->pattern_slab_size)
 	{
@@ -28,7 +30,9 @@ tg_pattern *tg_pattern_get(tg_domain *domain)
 	pattern = &domain->pattern_slab[domain->pattern_slab_pos];
 
 	pattern->magic = TG_PATTERN_MAGIC;
+	pattern->pattern_token_init = 0;
 	pattern->malloc = 0;
+	pattern->ref_count = 0;
 
 	domain->pattern_slab_pos++;
 
@@ -38,6 +42,8 @@ tg_pattern *tg_pattern_get(tg_domain *domain)
 tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 {
 	const char *value;
+	jsmntok_t *token;
+	int i;
 
 	assert(pattern && pattern->magic == TG_PATTERN_MAGIC);
 
@@ -84,7 +90,25 @@ tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 
 	//PATTERN TOKENS
 
-	pattern->pattern_tokens = NULL;
+	tg_list_init(&pattern->pattern_tokens, 0, NULL);
+	pattern->pattern_token_init = 1;
+
+	token = tg_json_get(tokens, "patternTokens");
+
+	if(TG_JSON_IS_ARRAY(token))
+	{
+		for(i = 0; i < token->size; i++)
+		{
+			tg_printd(3, "  Found patternToken: '%s'\n", token[i + 1].str);
+
+			tg_list_add(&pattern->pattern_tokens, (void*)token[i + 1].str);
+		}
+	}
+	else
+	{
+		fprintf(stderr, "Invalid patternTokens\n");
+		goto perror;
+	}
 
 	//RANK TYPE
 
@@ -124,6 +148,8 @@ tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 	return pattern;
 
 perror:
+	pattern->ref_count = 1;
+
 	tg_pattern_free(pattern);
 
 	return NULL;
@@ -132,6 +158,19 @@ perror:
 void tg_pattern_free(tg_pattern *pattern)
 {
 	assert(pattern && pattern->magic == TG_PATTERN_MAGIC);
+
+	assert(pattern->ref_count > 0);
+
+	if(pattern->ref_count > 1)
+	{
+		pattern->ref_count--;
+		return;
+	}
+
+	if(pattern->pattern_token_init)
+	{
+		tg_list_free(&pattern->pattern_tokens);
+	}
 
 	pattern->magic = 0;
 

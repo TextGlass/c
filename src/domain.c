@@ -3,6 +3,7 @@
 static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch);
 static tg_list *tg_list_get(tg_domain *domain, void (*free)(void *item));
+static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens);
 
 tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 		const char *pattern_patch, const char *attribute_patch)
@@ -86,10 +87,8 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 {
 	tg_domain *domain;
 	jsmntok_t *token, *tokens, *norm, *patch;
-	tg_list *list;
-	tg_pattern *pattern_obj;
 	int i;
-	size_t count;
+	long count, count2;
 
 	assert(pattern);
 
@@ -185,9 +184,9 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		count += patch[0].size;
 	}
 	
-	domain->patterns = tg_hashtable_init(count + 100, (TG_FREE)&tg_list_free);
+	domain->patterns = tg_hashtable_alloc(count + 100, (TG_FREE)&tg_list_free);
 
-	tg_printd(3, "Pattern hash size: %zu\n", count);
+	tg_printd(3, "Pattern hash size: %ld\n", count);
 
 	domain->pattern_slab_size = count;
 	domain->pattern_slab_pos = 0;
@@ -203,71 +202,21 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	assert(domain->list_slab);
 
-	count = 0;
+	count = tg_domain_create_pindex(domain, norm);
 
-	if(TG_JSON_IS_ARRAY(norm))
+	if(count < 1)
 	{
-		for(i = 1; i < norm[0].skip; i++)
-		{
-			tokens = &norm[i];
-
-			pattern_obj = tg_pattern_get(domain);
-
-			pattern_obj = tg_pattern_create(pattern_obj, tokens);
-
-			if(!pattern_obj)
-			{
-				goto derror;
-			}
-
-			list = tg_hashtable_get(domain->patterns, pattern_obj->pattern_id);
-
-			if(!list)
-			{
-				list = tg_list_get(domain, (TG_FREE)&tg_pattern_free);
-				tg_hashtable_set(domain->patterns, pattern_obj->pattern_id, list);
-			}
-
-			tg_list_add(list, pattern_obj);
-
-			count++;
-
-			i+= norm[i].skip;
-		}
+		goto derror;
 	}
 
-	if(TG_JSON_IS_ARRAY(patch))
+	count2 = tg_domain_create_pindex(domain, patch);
+
+	if(count2 < 0)
 	{
-		for(i = 1; i < patch[0].skip; i++)
-		{
-			tokens = &patch[i];
-
-			pattern_obj = tg_pattern_get(domain);
-
-			pattern_obj = tg_pattern_create(pattern_obj, tokens);
-
-			if(!pattern_obj)
-			{
-				goto derror;
-			}
-
-			list = tg_hashtable_get(domain->patterns, pattern_obj->pattern_id);
-
-			if(!list)
-			{
-				list = tg_list_get(domain, (TG_FREE)&tg_pattern_free);
-				tg_hashtable_set(domain->patterns, pattern_obj->pattern_id, list);
-			}
-
-			tg_list_add(list, pattern_obj);
-
-			count++;
-
-			i+= patch[i].skip;
-		}
+		goto derror;
 	}
 
-	tg_printd(1, "Found %zu pattern(s)\n", count);
+	tg_printd(1, "Found %ld pattern(s)\n", count + count2);
 
 	tg_jsonfile_free_tokens(domain->pattern);
 	tg_jsonfile_free_tokens(domain->attribute);
@@ -280,6 +229,56 @@ derror:
 	tg_domain_free(domain);
 
 	return NULL;
+}
+
+static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
+{
+	jsmntok_t *token;
+	tg_pattern *pattern;
+	long count = 0;
+	tg_list *list;
+	tg_list_item *item;
+	int i;
+
+	if(TG_JSON_IS_ARRAY(tokens))
+	{
+		for(i = 1; i < tokens[0].skip; i++)
+		{
+			token = &tokens[i];
+
+			pattern = tg_pattern_get(domain);
+
+			pattern = tg_pattern_create(pattern, token);
+
+			if(!pattern)
+			{
+				return -1;
+			}
+
+			tg_list_foreach(&pattern->pattern_tokens, item)
+			{
+				list = tg_hashtable_get(domain->patterns, (char*)item->value);
+
+				if(!list)
+				{
+					list = tg_list_get(domain, (TG_FREE)&tg_pattern_free);
+					tg_hashtable_set(domain->patterns, (char*)item->value, list);
+				}
+
+				tg_list_add(list, pattern);
+
+				pattern->ref_count++;
+
+				tg_printd(3, "  Adding %s to pindex %s\n", pattern->pattern_id, (char*)item->value);
+
+				count++;
+			}
+
+			i+= tokens[i].skip;
+		}
+	}
+
+	return count;
 }
 
 void tg_domain_free(tg_domain *domain)
@@ -328,11 +327,11 @@ static tg_list *tg_list_get(tg_domain *domain, void (*free)(void *item))
 {
 	tg_list *list;
 
-	assert(domain);
+	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
 
 	if(domain->list_slab_pos >= domain->list_slab_size)
 	{
-		return tg_list_init(0, free);
+		return tg_list_alloc(0, free);
 	}
 
 	list = &domain->list_slab[domain->list_slab_pos];

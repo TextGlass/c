@@ -64,9 +64,12 @@ typedef struct
 
 	tg_pattern_type		pattern_type;
 
-	char			**pattern_tokens;
+	tg_list			pattern_tokens;
 
 	int			malloc:1;
+	int			pattern_token_init:1;
+
+	unsigned long		ref_count;
 }
 tg_pattern;
 
