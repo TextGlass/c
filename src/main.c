@@ -5,6 +5,8 @@
 static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file);
 static void tg_printHelp();
 
+#define TG_MAIN_ERROR(msg) do {fprintf(stderr, "%s\n", msg); exit = 1; goto mdone; } while(0)
+
 int main(int argc, char **argv)
 {
 	tg_list *tests;
@@ -14,9 +16,10 @@ int main(int argc, char **argv)
 	char *pattern_patch = NULL;
 	char *attribute_patch = NULL;
 	char *test_string = NULL;
+	char *option, buf[128];
 	tg_jsonfile *test_file;
 	tg_domain *domain = NULL;
-	int c, exit = 0;
+	int i, exit = 0;
 	struct timespec start, end, diff;
 
 	tg_printd(0, "TextGlass C Client %s\n", TEXTGLASS_VERSION);
@@ -25,56 +28,78 @@ int main(int argc, char **argv)
 
 	//PARSE THE COMMAND LINE
 
-	opterr = 0;
+	for(i = 1; i < argc; i++) {
+		option = argv[i];
 
-	while ((c = getopt(argc, argv, "p:a:s:b:t:hu:qvw")) != -1)
-	{
-		switch (c)
+		if(!strcmp(option, "-h"))
 		{
-			case 'h':
-				tg_printHelp();
-				goto mdone;
-			case 'p':
-				pattern = optarg;
-				break;
-			case 'a':
-				attribute = optarg;
-				break;
-			case 's':
-				pattern_patch = optarg;
-				break;
-			case 'b':
-				attribute_patch = optarg;
-				break;
-			case 't':
-				tg_list_add(tests, optarg);
-				break;
-			case 'u':
-				test_string = optarg;
-				break;
-			case 'q':
-				tg_printd_debug_level = 0;
-				break;
-			case 'v':
-				tg_printd_debug_level = 2;
-				break;
-			case 'w':
-				tg_printd_debug_level = 3;
-				break;
-			default:
-				tg_printHelp();
-				fprintf(stderr, "\nunknown option: %c\n", optopt);
-				exit = 1;
-				goto mdone;
+			tg_printHelp();
+			return 0;
+		}
+		else if(!strcmp(option, "-p") && (i + 1) < argc && *argv[i + 1] != '-')
+		{
+			if(pattern)
+			{
+				TG_MAIN_ERROR("pattern file already defined");
+			}
+			pattern = argv[++i];
+		}
+		else if(!strcmp(option, "-a") && (i + 1) < argc && *argv[i + 1] != '-')
+		{
+			if(attribute)
+			{
+				TG_MAIN_ERROR("attribute file already defined");
+			}
+			attribute = argv[++i];
+		}
+		else if(!strcmp(option, "-pp") && (i + 1) < argc && *argv[i + 1] != '-')
+		{
+			if(pattern_patch)
+			{
+			      TG_MAIN_ERROR("pattern patch file already defined");
+			}
+			pattern_patch = argv[++i];
+		}
+		else if(!strcmp(option, "-ap") && (i + 1) < argc && *argv[i + 1] != '-')
+		{
+			if(attribute_patch)
+			{
+				TG_MAIN_ERROR("attribute patch file already defined");
+			}
+			attribute_patch = argv[++i];
+		}
+		else if(!strcmp(option, "-t") && (i + 1) < argc && *argv[i + 1] != '-')
+		{
+			tg_list_add(tests, argv[++i]);
+		}
+		else if(*option != '-' && !test_string)
+		{
+			test_string = option;
+		}
+		else if(!strcmp(option, "-q"))
+		{
+			tg_printd_debug_level = 0;
+		}
+		else if(!strcmp(option, "-v"))
+		{
+			tg_printd_debug_level = 2;
+		}
+		else if(!strcmp(option, "-vv"))
+		{
+			tg_printd_debug_level = 3;
+		}
+		else
+		{
+			tg_printHelp();
+			sprintf(buf, "unknown option: %s\n", option);
+			TG_MAIN_ERROR(buf);
 		}
 	}
 
 	if(!pattern)
 	{
 		tg_printHelp();
-		fprintf(stderr, "\npattern file required\n");
-		exit = 1;
-		goto mdone;
+		TG_MAIN_ERROR("\npattern file required\n");
 	}
 
 	//BUILD THE CLIENT
@@ -85,9 +110,7 @@ int main(int argc, char **argv)
 
 	if(!domain)
 	{
-		fprintf(stderr, "Could not load domain\n");
-		exit = 1;
-		goto mdone;
+		TG_MAIN_ERROR("Could not load domain\n");
 	}
 
 	clock_gettime(CLOCK_REALTIME, &end);
@@ -106,9 +129,7 @@ int main(int argc, char **argv)
 
 		if(!test_file)
 		{
-			fprintf(stderr, "Error reading test file\n");
-			exit = 1;
-			goto mdone;
+			TG_MAIN_ERROR("Error reading test file\n");
 		}
 
 		clock_gettime(CLOCK_REALTIME, &start);
@@ -120,8 +141,7 @@ int main(int argc, char **argv)
 
 		if(exit)
 		{
-			fprintf(stderr, "Test file failure\n");
-			goto mdone;
+			TG_MAIN_ERROR("Test file failure\n");
 		}
 
 		tg_printd(0, "All tests passed\n");
@@ -159,17 +179,17 @@ mdone:
 
 static void tg_printHelp()
 {
-	tg_printd(0, "Usage: textglass_client [OPTIONS]\n");
+	tg_printd(0, "Usage: textglass_client [OPTIONS] [STRING]\n");
 	tg_printd(0, "  -p <file>            load TextGlass pattern file (REQUIRED)\n");
 	tg_printd(0, "  -a <file>            load TextGlass attribute file\n");
-	tg_printd(0, "  -s <file>            load TextGlass pattern patch file\n");
-	tg_printd(0, "  -b <file>            load TextGlass attribute patch file\n");
+	tg_printd(0, "  -pp <file>           load TextGlass pattern patch file\n");
+	tg_printd(0, "  -ap <file>           load TextGlass attribute patch file\n");
 	tg_printd(0, "  -t <file>            load TextGlass test file\n");
 	tg_printd(0, "  -h                   print help\n");
 	tg_printd(0, "  -q                   quiet\n");
 	tg_printd(0, "  -v                   verbose\n");
-	tg_printd(0, "  -w                   very verbose\n");
-	tg_printd(0, "  -u <string>          test string\n");
+	tg_printd(0, "  -vv                  very verbose\n");
+	tg_printd(0, "  STRING               test string\n");
 }
 
 static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
