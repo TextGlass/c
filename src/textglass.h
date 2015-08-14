@@ -76,6 +76,21 @@ tg_pattern;
 typedef struct
 {
 	unsigned int		magic;
+#define TG_TRANSFORMER_MAGIC	0x940CE11D
+
+	char			*(*transformer)(char*);
+
+	char			*s1;
+	char			*s2;
+
+	int			i1;
+	int			i2;
+}
+tg_transformer;
+
+typedef struct
+{
+	unsigned int		magic;
 #define TG_DOMAIN_MAGIC		0x4C3A041E
 
 	tg_jsonfile		*pattern;
@@ -85,6 +100,8 @@ typedef struct
 
 	const char		*domain;
 	const char		*domain_version;
+
+	tg_list			*input_transformers;
 
 	const char		**token_seperators;
 	int			token_seperator_len;
@@ -139,6 +156,10 @@ tg_pattern *tg_pattern_alloc();
 tg_pattern *tg_pattern_get(tg_domain *domain);
 tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens);
 void tg_pattern_free(tg_pattern *pattern);
+
+
+tg_list *tg_transformer_compile(jsmntok_t *tokens);
+void tg_transformer_free(tg_transformer *transformer);
 
 
 #endif	/* _TEXTGLASS_H_INCLUDED_ */

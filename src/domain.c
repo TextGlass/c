@@ -116,6 +116,27 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		patch = tg_json_get(domain->pattern_patch->tokens, "inputParser");
 	}
 
+	//INPUT TRANSFORMERS
+
+	tokens = tg_json_get(patch, "transformers");
+
+	if(!TG_JSON_IS_ARRAY(tokens))
+	{
+		tokens = tg_json_get(norm, "transformers");
+	}
+
+	if(TG_JSON_IS_ARRAY(tokens))
+	{
+		domain->input_transformers = tg_transformer_compile(tokens);
+
+		if(!domain->input_transformers)
+		{
+			goto derror;
+		}
+
+		tg_printd(1, "Found %zu tokenSeperator(s)\n", domain->input_transformers->size);
+	}
+
 	//TOKEN SEPERATORS
 
 	tokens = tg_json_get(patch, "tokenSeperators");
@@ -290,7 +311,10 @@ void tg_domain_free(tg_domain *domain)
 
 	assert(domain->magic == TG_DOMAIN_MAGIC);
 
-	tg_hashtable_free(domain->patterns);
+	if(domain->patterns)
+	{
+		tg_hashtable_free(domain->patterns);
+	}
 
 	if(domain->list_slab)
 	{
@@ -306,6 +330,11 @@ void tg_domain_free(tg_domain *domain)
 	{
 		free(domain->token_seperators);
 		domain->token_seperator_len = 0;
+	}
+
+	if(domain->input_transformers)
+	{
+		tg_list_free(domain->input_transformers);
 	}
 	
 	tg_jsonfile_free(domain->pattern);

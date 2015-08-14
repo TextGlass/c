@@ -5,7 +5,7 @@ LIBFLAGS=-lpthread
 RM=rm -f
 
 INCLUDES=textglass.h data/tree.h data/queue.h data/list.h data/hashtable.h jsmn/jsmn.h
-OBJS=domain.o pattern.o classify.o json_file.o util.o data/hashtable.o data/list.o jsmn/jsmn.o
+OBJS=domain.o pattern.o classify.o transformer.o json_file.o util.o data/hashtable.o data/list.o jsmn/jsmn.o
 
 .PHONY: clean lib
 
