@@ -33,23 +33,17 @@ tg_list *tg_list_init(size_t initial_len, void (*free)(void *item))
 static tg_list_item *tg_list_item_alloc(tg_list *list)
 {
 	tg_list_item *item;
-	int i;
 
-	//if(list->prealloc_len && !list->prealloc[list->prealloc_len - 1].magic)
 	if(list->size < list->prealloc_len)
 	{
-		for(i = 0; i < list->prealloc_len; i++)
-		{
-			item = &list->prealloc[i];
+		item = &list->prealloc[list->size];
 
-			if(!item->magic)
-			{
-				item->magic = TG_LIST_ITEM_MAGIC;
-				item->malloc = 0;
+		assert(item->magic != TG_LIST_ITEM_MAGIC);
 
-				return item;
-			}
-		}
+		item->magic = TG_LIST_ITEM_MAGIC;
+		item->malloc = 0;
+
+		return item;
 	}
 
 	item = malloc(sizeof(tg_list_item));

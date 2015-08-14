@@ -73,7 +73,10 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 	return domain;
 
 derror:
-	tg_domain_free(domain);
+	tg_jsonfile_free(pattern_file);
+	tg_jsonfile_free(attribute_file);
+	tg_jsonfile_free(pattern_patch_file);
+	tg_jsonfile_free(attribute_patch_file);
 
 	return NULL;
 }
