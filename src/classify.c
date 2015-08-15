@@ -1,19 +1,45 @@
 #include "textglass.h"
 
+void tg_classify_free(tg_classified *classify);
+
 void tg_classify(tg_domain *domain, const char *original)
 {
 	char *input;
+	tg_transformer *transformer;
 	size_t length;
+	tg_classified *classify;
 	tg_list *tokens = NULL;
-	tg_list *matched_tokens = NULL;
-	tg_list *candidates = NULL;
 	tg_list *patterns;
 	tg_list_item *item, *item_j;
 
+	classify = calloc(1, sizeof(tg_classified));
+
+	assert(classify);
+
+	classify->magic = TG_CLASSIFIED_MAGIC;
+	classify->domain = domain;
+	classify->free_list = tg_list_alloc(15, (TG_FREE)&free);
+
 	input = strdup(original);
+	tg_list_add(classify->free_list, input);
+	
 	length = strlen(input);
 
-	tg_printd(2, "classify input on %s: '%s':%zu\n", domain->domain, input, length);
+	tg_printd(2, "Classify input on %s: '%s':%zu\n", domain->domain, input, length);
+
+	//TRANSFORMERS
+
+	if(domain->input_transformers)
+	{
+		tg_list_foreach(domain->input_transformers, item)
+		{
+			transformer = (tg_transformer*)item->value;
+
+			input = transformer->transformer(classify, input);
+
+			tg_printd(2, "Transformed: '%s'\n", input);
+		}
+	}
 
 	//TOKEN SEPERATORS
 
@@ -23,13 +49,13 @@ void tg_classify(tg_domain *domain, const char *original)
 
 	tg_list_foreach(tokens, item)
 	{
-		tg_printd(3, "classify tokens: '%s'\n", (char*)item->value);
+		tg_printd(3, "Classify tokens: '%s'\n", (char*)item->value);
 	}
 
 	//PATTERN MATCHING
 
-	matched_tokens = tg_list_alloc(15, NULL);
-	candidates = tg_list_alloc(15, NULL);
+	classify->matched_tokens = tg_list_alloc(15, NULL);
+	classify->candidates = tg_list_alloc(15, NULL);
 
 	tg_list_foreach(tokens, item)
 	{
@@ -45,9 +71,30 @@ void tg_classify(tg_domain *domain, const char *original)
 		}
 	}
 
-	tg_list_free(candidates);
-	tg_list_free(matched_tokens);
+
 	tg_list_free(tokens);
-	
-	free(input);
+	tg_classify_free(classify);
+
+	return;
+}
+
+void tg_classify_free(tg_classified *classify)
+{
+	assert(classify && classify->magic == TG_CLASSIFIED_MAGIC);
+
+	tg_list_free(classify->free_list);
+
+	if(classify->candidates)
+	{
+		free(classify->candidates);
+	}
+
+	if(classify->matched_tokens)
+	{
+		free(classify->matched_tokens);
+	}
+
+	classify->magic = 0;
+
+	free(classify);
 }

@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
 
 #include "list.h"
 #include "hashtable.h"
@@ -76,21 +77,6 @@ tg_pattern;
 typedef struct
 {
 	unsigned int		magic;
-#define TG_TRANSFORMER_MAGIC	0x940CE11D
-
-	char			*(*transformer)(char*);
-
-	char			*s1;
-	char			*s2;
-
-	int			i1;
-	int			i2;
-}
-tg_transformer;
-
-typedef struct
-{
-	unsigned int		magic;
 #define TG_DOMAIN_MAGIC		0x4C3A041E
 
 	tg_jsonfile		*pattern;
@@ -119,6 +105,35 @@ typedef struct
 	tg_hashtable		*patterns;
 }
 tg_domain;
+
+typedef struct
+{
+	unsigned int		magic;
+#define TG_CLASSIFIED_MAGIC	0x5B8A23EF
+
+	tg_domain		*domain;
+
+	tg_list			*matched_tokens;
+	tg_list			*candidates;
+
+	tg_list			*free_list;
+}
+tg_classified;
+
+typedef struct
+{
+	unsigned int		magic;
+#define TG_TRANSFORMER_MAGIC	0x940CE11D
+
+	char			*(*transformer)(tg_classified*,char*);
+
+	char			*s1;
+	char			*s2;
+
+	int			i1;
+	int			i2;
+}
+tg_transformer;
 
 
 #define TG_FREE				void (*)(void*)

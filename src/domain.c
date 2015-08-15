@@ -134,7 +134,13 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 			goto derror;
 		}
 
-		tg_printd(1, "Found %zu tokenSeperator(s)\n", domain->input_transformers->size);
+		tg_printd(1, "Found %zu transformer(s)\n", domain->input_transformers->size);
+
+		if(!domain->input_transformers->size)
+		{
+			tg_list_free(domain->input_transformers);
+			domain->input_transformers = NULL;
+		}
 	}
 
 	//TOKEN SEPERATORS
