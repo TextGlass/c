@@ -31,7 +31,7 @@ typedef struct
 
 	tg_list_head			head;
 
-	void				(*callback)(void*);
+	void(*callback)			(void*);
 
 	pthread_rwlock_t		rwlock;
 

@@ -120,15 +120,15 @@ typedef struct
 }
 tg_classified;
 
-typedef struct
+typedef struct tg_transformer
 {
 	unsigned int		magic;
 #define TG_TRANSFORMER_MAGIC	0x940CE11D
 
-	char			*(*transformer)(tg_classified*,char*);
+	char*(*transformer)	(tg_list*,struct tg_transformer*,char*);
 
-	char			*s1;
-	char			*s2;
+	const char		*s1;
+	const char		*s2;
 
 	int			i1;
 	int			i2;
@@ -136,7 +136,7 @@ typedef struct
 tg_transformer;
 
 
-#define TG_FREE				void (*)(void*)
+#define TG_FREE				void(*)(void*)
 
 
 extern int tg_printd_debug_level;

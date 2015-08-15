@@ -35,9 +35,17 @@ void tg_classify(tg_domain *domain, const char *original)
 		{
 			transformer = (tg_transformer*)item->value;
 
-			input = transformer->transformer(classify, input);
+			input = transformer->transformer(classify->free_list, transformer, input);
 
-			tg_printd(2, "Transformed: '%s'\n", input);
+			if(!input)
+			{
+				tg_printd(2, "Transformer error\n");
+				goto cerror;
+			}
+
+			length = strlen(input);
+
+			tg_printd(2, "Transformed: '%s':%zu\n", input, length);
 		}
 	}
 
@@ -72,6 +80,12 @@ void tg_classify(tg_domain *domain, const char *original)
 	}
 
 
+	tg_list_free(tokens);
+	tg_classify_free(classify);
+
+	return;
+
+cerror:
 	tg_list_free(tokens);
 	tg_classify_free(classify);
 

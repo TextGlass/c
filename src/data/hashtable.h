@@ -51,7 +51,7 @@ typedef struct
 
 	size_t				bucket_len;
 
-	void				(*callback)(void*);
+	void(*callback)			(void*);
 }
 tg_hashtable;
 
