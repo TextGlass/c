@@ -92,6 +92,8 @@ typedef struct
 	const char		**token_seperators;
 	int			token_seperator_len;
 
+	unsigned int		ngram_size;
+
 	const char		*default_id;
 
 	tg_list			*list_slab;

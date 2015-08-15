@@ -2,7 +2,7 @@
 
 static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch);
-static tg_list *tg_list_get(tg_domain *domain, void (*free)(void *item));
+static tg_list *tg_domain_list_get(tg_domain *domain, void (*free)(void *item));
 static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens);
 
 tg_domain *tg_domain_load(const char *pattern, const char *attribute,
@@ -87,6 +87,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 {
 	tg_domain *domain;
 	jsmntok_t *token, *tokens, *norm, *patch;
+	const char *field;
 	int i;
 	long count, count2;
 
@@ -168,6 +169,32 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		}
 
 		tg_printd(1, "Found %d tokenSeperator(s)\n", domain->token_seperator_len);
+	}
+
+	//NGRAM CONCAT SIZE
+
+	domain->ngram_size = 1;
+
+	field = tg_json_get_str(patch, "ngramConcatSize");
+
+	if(!field)
+	{
+		field = tg_json_get_str(norm, "ngramConcatSize");
+	}
+
+	if(field)
+	{
+		i = atoi(field);
+
+		if(i < 1)
+		{
+			fprintf(stderr, "Invalid ngramConcatSize\n");
+			goto derror;
+		}
+
+		domain->ngram_size = i;
+
+		tg_printd(1, "Found ngramConcatSize: %lu\n", domain->ngram_size);
 	}
 
 	//DEFAULT PATTERN ID
@@ -282,13 +309,13 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 				return -1;
 			}
 
-			tg_list_foreach(&pattern->pattern_tokens, item)
+			TG_LIST_FOREACH(&pattern->pattern_tokens, item)
 			{
 				list = tg_hashtable_get(domain->patterns, (char*)item->value);
 
 				if(!list)
 				{
-					list = tg_list_get(domain, (TG_FREE)&tg_pattern_free);
+					list = tg_domain_list_get(domain, (TG_FREE)&tg_pattern_free);
 					tg_hashtable_set(domain->patterns, (char*)item->value, list);
 				}
 
@@ -358,7 +385,7 @@ void tg_domain_free(tg_domain *domain)
 	free(domain);
 }
 
-static tg_list *tg_list_get(tg_domain *domain, void (*free)(void *item))
+static tg_list *tg_domain_list_get(tg_domain *domain, void (*free)(void *item))
 {
 	tg_list *list;
 

@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 
 	//DO THE TESTS
 
-	tg_list_foreach(tests, item)
+	TG_LIST_FOREACH(tests, item)
 	{
 		tg_printd(1, "Test file: %s\n", (char*)item->value);
 

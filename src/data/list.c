@@ -89,6 +89,23 @@ void tg_list_add(tg_list *list, void *value)
 	assert(!pthread_rwlock_unlock(&list->rwlock));
 }
 
+void *tg_list_get(tg_list *list, size_t index)
+{
+	tg_list_item *item;
+
+	TG_LIST_FOREACH(list, item)
+	{
+		if(!index)
+		{
+			return item->value;
+		}
+
+		index--;
+	}
+
+	return NULL;
+}
+
 int tg_list_item_valid(tg_list_item *item)
 {
 	if(!item)

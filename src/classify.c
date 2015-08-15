@@ -1,16 +1,17 @@
 #include "textglass.h"
 
-void tg_classify_free(tg_classified *classify);
+static void tg_classify_match(tg_classified *classify, const char *token);
+static void tg_classify_free(tg_classified *classify);
 
 void tg_classify(tg_domain *domain, const char *original)
 {
-	char *input;
+	char *input, *ngram, *token;
 	tg_transformer *transformer;
-	size_t length;
+	size_t length, token_length;
 	tg_classified *classify;
 	tg_list *tokens = NULL;
-	tg_list *patterns;
-	tg_list_item *item, *item_j;
+	tg_list_item *item;
+	size_t i, j, k, ngram_pos;
 
 	classify = calloc(1, sizeof(tg_classified));
 
@@ -21,17 +22,20 @@ void tg_classify(tg_domain *domain, const char *original)
 	classify->free_list = tg_list_alloc(15, (TG_FREE)&free);
 
 	input = strdup(original);
+
+	assert(input);
+	
 	tg_list_add(classify->free_list, input);
 	
 	length = strlen(input);
 
-	tg_printd(2, "Classify input on %s: '%s':%zu\n", domain->domain, input, length);
+	tg_printd(3, "Classify input on %s: '%s':%zu\n", domain->domain, input, length);
 
 	//TRANSFORMERS
 
 	if(domain->input_transformers)
 	{
-		tg_list_foreach(domain->input_transformers, item)
+		TG_LIST_FOREACH(domain->input_transformers, item)
 		{
 			transformer = (tg_transformer*)item->value;
 
@@ -39,13 +43,13 @@ void tg_classify(tg_domain *domain, const char *original)
 
 			if(!input)
 			{
-				tg_printd(2, "Transformer error\n");
+				tg_printd(3, "Transformer error\n");
 				goto cerror;
 			}
 
 			length = strlen(input);
 
-			tg_printd(2, "Transformed: '%s':%zu\n", input, length);
+			tg_printd(3, "Transformed: '%s':%zu\n", input, length);
 		}
 	}
 
@@ -55,30 +59,54 @@ void tg_classify(tg_domain *domain, const char *original)
 
 	tg_split(input, length, domain->token_seperators, domain->token_seperator_len, tokens);
 
-	tg_list_foreach(tokens, item)
+	if(tg_printd_debug_level >= 3)
 	{
-		tg_printd(3, "Classify tokens: '%s'\n", (char*)item->value);
+		TG_LIST_FOREACH(tokens, item)
+		{
+			tg_printd(3, "Classify tokens: '%s'\n", (char*)item->value);
+		}
 	}
 
-	//PATTERN MATCHING
+	//NGRAMS AND PATTERN MATCHING
+
+	ngram = malloc(length + 1);
+
+	assert(ngram);
+
+	tg_list_add(classify->free_list, ngram);
 
 	classify->matched_tokens = tg_list_alloc(15, NULL);
 	classify->candidates = tg_list_alloc(15, NULL);
 
-	tg_list_foreach(tokens, item)
+	for(i = 0; i < tokens->size; i++)
 	{
-		patterns = tg_hashtable_get(domain->patterns, (char*)item->value);
-
-		if(patterns)
+		for(j = domain->ngram_size; j > 0; j--)
 		{
-			tg_list_foreach(patterns, item_j)
+			if(i + j > tokens->size)
 			{
-				tg_printd(3, "Hit: '%s' patternId: %s\n", (char*)item->value,
-					 ((tg_pattern*)item_j->value)->pattern_id);
+				continue;
 			}
+
+			ngram_pos = 0;
+
+			for(k = i; k < i + j; k++)
+			{
+				token = (char*)tg_list_get(tokens, k);
+
+				token_length = strlen(token);
+
+				memcpy(ngram + ngram_pos, token, token_length);
+
+				ngram_pos += token_length;
+			}
+
+			ngram[ngram_pos] = '\0';
+
+			tg_printd(3, "Ngram: '%s'\n", ngram);
+
+			tg_classify_match(classify, ngram);
 		}
 	}
-
 
 	tg_list_free(tokens);
 	tg_classify_free(classify);
@@ -92,7 +120,27 @@ cerror:
 	return;
 }
 
-void tg_classify_free(tg_classified *classify)
+static void tg_classify_match(tg_classified *classify, const char *token)
+{
+	tg_list *patterns;
+	tg_list_item *item;
+
+	assert(classify && classify->magic == TG_CLASSIFIED_MAGIC);
+	assert(classify->domain && classify->domain->magic == TG_DOMAIN_MAGIC);
+
+	patterns = tg_hashtable_get(classify->domain->patterns, token);
+
+	if(patterns)
+	{
+		TG_LIST_FOREACH(patterns, item)
+		{
+			tg_printd(3, "Hit: '%s' patternId: %s\n", token,
+				 ((tg_pattern*)item->value)->pattern_id);
+		}
+	}
+}
+
+static void tg_classify_free(tg_classified *classify)
 {
 	assert(classify && classify->magic == TG_CLASSIFIED_MAGIC);
 
