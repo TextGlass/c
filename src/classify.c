@@ -1,9 +1,9 @@
 #include "textglass.h"
 
-static void tg_classify_match(tg_classified *classify, const char *token);
+static int tg_classify_match(tg_classified *classify, const char *token);
 static void tg_classify_free(tg_classified *classify);
 
-void tg_classify(tg_domain *domain, const char *original)
+const char *tg_classify(tg_domain *domain, const char *original)
 {
 	char *input, *ngram, *token;
 	tg_transformer *transformer;
@@ -12,6 +12,8 @@ void tg_classify(tg_domain *domain, const char *original)
 	tg_list *tokens = NULL;
 	tg_list_item *item;
 	size_t i, j, k, ngram_pos;
+	int rank, wrank;
+	tg_pattern *winner = NULL, *candidate;
 
 	classify = calloc(1, sizeof(tg_classified));
 
@@ -104,26 +106,72 @@ void tg_classify(tg_domain *domain, const char *original)
 
 			tg_printd(3, "Ngram: '%s'\n", ngram);
 
-			tg_classify_match(classify, ngram);
+			if(tg_classify_match(classify, ngram))
+			{
+				goto cmatch_over;
+			}
 		}
 	}
+cmatch_over:
+
+	//FIND THE WINNER
+
+	TG_LIST_FOREACH(classify->candidates, item)
+	{
+		candidate = (tg_pattern*)item->value;
+		assert(candidate && candidate->magic == TG_PATTERN_MAGIC);
+
+		rank = tg_pattern_rank(candidate);
+		wrank = tg_pattern_rank(winner);
+
+		if((wrank > rank || winner == candidate))
+		{
+			continue;
+		}
+		
+		i = tg_pattern_matched_length(candidate, classify->matched_tokens);
+
+		if(!i)
+		{
+			continue;
+		}
+
+		tg_printd(3, "Candidate: %s, rank=%d, matched=%zu\n", candidate->pattern_id, rank, i);
+
+		if(!winner || rank > wrank || (rank == wrank &&
+			i > tg_pattern_matched_length(winner, classify->matched_tokens)))
+		{
+			winner = candidate;
+		}
+	}
+
+	tg_printd(3, "Winner: %s\n", winner ? winner->pattern_id : NULL);
 
 	tg_list_free(tokens);
 	tg_classify_free(classify);
 
-	return;
+	if(winner)
+	{
+		return winner->pattern_id;
+	}
+	else
+	{
+		return domain->default_id;
+	}
 
 cerror:
 	tg_list_free(tokens);
 	tg_classify_free(classify);
 
-	return;
+	return domain->default_id;
 }
 
-static void tg_classify_match(tg_classified *classify, const char *token)
+static int tg_classify_match(tg_classified *classify, const char *token)
 {
 	tg_list *patterns;
 	tg_list_item *item;
+	tg_pattern *candidate;
+	char *matched;
 
 	assert(classify && classify->magic == TG_CLASSIFIED_MAGIC);
 	assert(classify->domain && classify->domain->magic == TG_DOMAIN_MAGIC);
@@ -132,12 +180,26 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 
 	if(patterns)
 	{
+		matched = strdup(token);
+
+		tg_list_add(classify->free_list, matched);
+		
+		tg_list_add(classify->matched_tokens, matched);
+
 		TG_LIST_FOREACH(patterns, item)
 		{
-			tg_printd(3, "Hit: '%s' patternId: %s\n", token,
-				 ((tg_pattern*)item->value)->pattern_id);
+			candidate = (tg_pattern*)item->value;
+
+			assert(candidate && candidate->magic == TG_PATTERN_MAGIC);
+
+			tg_list_add(classify->candidates, candidate);
+
+			tg_printd(3, "Hit: '%s' patternId: %s\n", matched,
+				 candidate->pattern_id);
 		}
 	}
+
+	return 0;
 }
 
 static void tg_classify_free(tg_classified *classify)
@@ -148,12 +210,12 @@ static void tg_classify_free(tg_classified *classify)
 
 	if(classify->candidates)
 	{
-		free(classify->candidates);
+		tg_list_free(classify->candidates);
 	}
 
 	if(classify->matched_tokens)
 	{
-		free(classify->matched_tokens);
+		tg_list_free(classify->matched_tokens);
 	}
 
 	classify->magic = 0;

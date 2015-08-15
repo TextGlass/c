@@ -166,12 +166,14 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 void tg_domain_free(tg_domain *domain);
 
 
-void tg_classify(tg_domain *domain, const char *original);
+const char *tg_classify(tg_domain *domain, const char *original);
 
 
 tg_pattern *tg_pattern_alloc();
 tg_pattern *tg_pattern_get(tg_domain *domain);
 tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens);
+size_t tg_pattern_matched_length(tg_pattern *pattern, tg_list *matched_tokens);
+int tg_pattern_rank(tg_pattern *pattern);
 void tg_pattern_free(tg_pattern *pattern);
 
 

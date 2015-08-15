@@ -93,6 +93,8 @@ void *tg_list_get(tg_list *list, size_t index)
 {
 	tg_list_item *item;
 
+	assert(list && list->magic == TG_LIST_MAGIC);
+
 	TG_LIST_FOREACH(list, item)
 	{
 		if(!index)
@@ -104,6 +106,27 @@ void *tg_list_get(tg_list *list, size_t index)
 	}
 
 	return NULL;
+}
+
+long tg_list_index_str(tg_list *list, char *value)
+{
+	long i = 0;
+	tg_list_item *item;
+
+	assert(list && list->magic == TG_LIST_MAGIC);
+	assert(value);
+
+	TG_LIST_FOREACH(list, item)
+	{
+		if(!strcmp(value, (char*)item->value))
+		{
+			return i;
+		}
+
+		i++;
+	}
+
+	return -1;
 }
 
 int tg_list_item_valid(tg_list_item *item)

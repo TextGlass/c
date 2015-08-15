@@ -121,15 +121,15 @@ tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 	}
 	else if(!strcmp(value, "None"))
 	{
-		pattern->pattern_type = TG_RANKTYPE_NONE;
+		pattern->rank_type = TG_RANKTYPE_NONE;
 	}
 	else if(!strcmp(value, "Weak"))
 	{
-		pattern->pattern_type = TG_RANKTYPE_WEAK;
+		pattern->rank_type = TG_RANKTYPE_WEAK;
 	}
 	else if(!strcmp(value, "Strong"))
 	{
-		pattern->pattern_type = TG_RANKTYPE_STRONG;
+		pattern->rank_type = TG_RANKTYPE_STRONG;
 	}
 	else
 	{
@@ -143,6 +143,19 @@ tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 
 	pattern->rank_value = 0;
 
+	value = tg_json_get_str(tokens, "rankValue");
+
+	if(value)
+	{
+		pattern->rank_value = atoi(value);
+
+		if(pattern->rank_value > 1000 || pattern->rank_value < -1000)
+		{
+			fprintf(stderr, "Invalid rankValue\n");
+			goto perror;
+		}
+	}
+
 	tg_printd(3, "  Found rankValue: %d\n", pattern->rank_value);
 
 	return pattern;
@@ -153,6 +166,74 @@ perror:
 	tg_pattern_free(pattern);
 
 	return NULL;
+}
+
+size_t tg_pattern_matched_length(tg_pattern *pattern, tg_list *matched_tokens)
+{
+	long last_found = -1, found;
+	size_t length = 0;
+	tg_list_item *item;
+	char *pattern_token;
+
+	assert(pattern && pattern->magic == TG_PATTERN_MAGIC);
+	assert(matched_tokens && matched_tokens->magic == TG_LIST_MAGIC);
+
+	TG_LIST_FOREACH(&pattern->pattern_tokens, item)
+	{
+		pattern_token = (char*)item->value;
+
+		found = tg_list_index_str(matched_tokens, pattern_token);
+
+		if(found == -1 && (pattern->pattern_type == TG_PATTERN_AND ||
+			pattern->pattern_type == TG_PATTERN_ORDERED_AND))
+		{
+			return 0;
+		}
+
+		if(found >= 0)
+		{
+			length += strlen(pattern_token);
+		}
+
+		if(pattern->pattern_type == TG_PATTERN_ORDERED_AND)
+		{
+			if(found <= last_found)
+			{
+				return 0;
+			}
+			else
+			{
+				last_found = found;
+			}
+		}
+	}
+
+	return length;
+}
+
+int tg_pattern_rank(tg_pattern *pattern)
+{
+	int rank;
+
+	if(!pattern)
+	{
+		return -10000000;
+	}
+
+	assert(pattern && pattern->magic == TG_PATTERN_MAGIC);
+
+	rank = pattern->rank_value;
+
+	if(pattern->rank_type == TG_RANKTYPE_WEAK)
+	{
+		rank += 100000;
+	}
+	else if(pattern->rank_type == TG_RANKTYPE_STRONG)
+	{
+		return 10000000;
+	}
+
+	return rank;
 }
 
 void tg_pattern_free(tg_pattern *pattern)

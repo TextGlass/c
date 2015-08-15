@@ -17,6 +17,7 @@ int main(int argc, char **argv)
 	char *attribute_patch = NULL;
 	char *test_string = NULL;
 	char *option, buf[128];
+	const char *result;
 	tg_jsonfile *test_file;
 	tg_domain *domain = NULL;
 	int i, exit = 0;
@@ -141,6 +142,7 @@ int main(int argc, char **argv)
 
 		if(exit)
 		{
+			tg_jsonfile_free(test_file);
 			TG_MAIN_ERROR("Test file failure\n");
 		}
 
@@ -159,10 +161,12 @@ int main(int argc, char **argv)
 
 		clock_gettime(CLOCK_REALTIME, &start);
 
-		tg_classify(domain, test_string);
+		result = tg_classify(domain, test_string);
 
 		clock_gettime(CLOCK_REALTIME, &end);
 		tg_time_diff(&end, &start, &diff);
+
+		tg_printd(0, "Test result: %s\n", result);
 
 		tg_printd(0, "Test time: %lds %ldms %ld.%ldus\n",
 			diff.tv_sec, diff.tv_nsec/1000000, diff.tv_nsec/1000%1000, diff.tv_nsec%1000);
@@ -196,7 +200,10 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 {
 	jsmntok_t *tests, *test;
 	const char *input;
+	const char *result;
+	const char *expected;
 	int i;
+	int errors = 0;
 
 	if(strcmp(test_file->type, "test" ) ||
 		strcmp(test_file->domain, domain->domain) ||
@@ -215,14 +222,36 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 			test = tg_json_array_get(tests, i);
 			
 			input = tg_json_get_str(test, "input");
+			expected = tg_json_get_str(test, "resultPatternId");
+
+			if(expected && !strcmp(expected, "null") &&
+				TG_JSON_IS_LITERAL(tg_json_get(test, "resultPatternId")))
+			{
+				expected = NULL;
+			}
 
 			if(input)
 			{
 				tg_printd(2, "Test input: '%s'\n", input);
-				tg_classify(domain, input);
+				result = tg_classify(domain, input);
+				if(!result && !expected)
+				{
+					tg_printd(2, "PASS: null\n");
+					continue;
+				}
+				else if(!result || !expected || strcmp(result, expected))
+				{
+					tg_printd(2, "FAILED: expected patternId: %s, got: %s\n", expected, result);
+					errors++;
+					continue;
+				}
+
+				//TODO check attributes
+
+				tg_printd(2, "PASS: %s\n", result);
 			}
 		}
 	}
 
-	return 0;
+	return errors;
 }
