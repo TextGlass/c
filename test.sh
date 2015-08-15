@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ROOT=../reference/domains
+ROOT="../reference/domains ../device ../browser ../os"
 DOMAINS=`find $ROOT -maxdepth 1 -type d | grep -v "domains$" | sort | xargs echo`
 
 function error
@@ -26,6 +26,12 @@ PASS=
 for DROOT in $DOMAINS
 do
     DOMAIN=`basename $DROOT`
+
+    if [ "$DOMAIN" = "domain" ]
+    then
+        DOMAINP=`dirname $DROOT`
+        DOMAIN=`basename $DOMAINP`
+    fi
 
     if [ ! -d $DROOT -o "`ls $DROOT 2> /dev/null | grep pattern`" = "" ]
     then
