@@ -323,7 +323,7 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 
 				pattern->ref_count++;
 
-				tg_printd(3, "  Adding %s to pindex %s\n", pattern->pattern_id, (char*)item->value);
+				tg_printd(3, "  Adding %s to pindex '%s'\n", pattern->pattern_id, (char*)item->value);
 
 				count++;
 			}
