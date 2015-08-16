@@ -4,8 +4,26 @@ LDFLAGS=
 LIBFLAGS=
 RM=rm -f
 
-INCLUDES=textglass.h data/tree.h data/queue.h data/list.h data/hashtable.h jsmn/jsmn.h
-OBJS=domain.o pattern.o classify.o transformer.o json_file.o util.o data/hashtable.o data/list.o jsmn/jsmn.o
+INCLUDES= \
+	textglass.h \
+	data/tree.h \
+	data/queue.h \
+	data/list.h \
+	data/hashtable.h \
+	jsmn/jsmn.h
+
+SOURCE= \
+	domain.c \
+	pattern.c \
+	classify.c \
+	transformer.c \
+	json_file.c \
+	util.c \
+	data/hashtable.c \
+	data/list.c \
+	jsmn/jsmn.c
+
+OBJS=$(SOURCE:.c=.o)
 
 .PHONY: clean lib
 
