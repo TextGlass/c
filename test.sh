@@ -1,5 +1,13 @@
 #!/bin/bash
 
+BINARY=src/textglass_client
+
+if [ ! -f "$BINARY" ]
+then
+    echo "Please run compile.sh"
+    exit 1
+fi
+
 ROOT="../reference/domains ../device ../browser ../os"
 DOMAINS=`find $ROOT -maxdepth 1 -type d | grep -v "domains$" | sort | xargs echo`
 
@@ -47,7 +55,7 @@ do
     AP=`find $DROOT -type f | grep attribute | grep patch | sort | sed "s/^/-ap /" | xargs echo`
     T=`find $DROOT -type f | grep test | sort | sed "s/^/-t /" | xargs echo`
 
-    CMD="`echo ./run.sh $P $PP $A $AP $T -q`"
+    CMD="`echo $BINARY $P $PP $A $AP $T -q`"
 
     echo "CMD: $CMD"
 
