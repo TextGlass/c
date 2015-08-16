@@ -162,6 +162,13 @@ typedef struct
 #define TG_RESULT_MAGIC		0xAB9D213A
 
 	const char		*pattern_id;
+
+	tg_list			*free_list;
+
+	const char		**keys;
+	const char		**values;
+
+	const char		**buf;
 }
 tg_result;
 
