@@ -53,6 +53,19 @@ typedef enum
 }
 tg_pattern_type;
 
+struct tg_pattern;
+
+typedef struct
+{
+	unsigned int		magic;
+#define TG_ATTRIBUTE_MAGIC	0xF45A0AC2
+
+	struct tg_pattern	*pattern;
+
+	int			malloc:1;
+}
+tg_attribute;
+
 typedef struct
 {
 	unsigned int		magic;
@@ -71,17 +84,10 @@ typedef struct
 	int			pattern_token_init:1;
 
 	unsigned long		ref_count;
+
+	tg_attribute		*attribute;
 }
 tg_pattern;
-
-typedef struct
-{
-	unsigned int		magic;
-#define TG_ATTRIBUTE_MAGIC	0xF45A0AC2
-
-	int			malloc:1;
-}
-tg_attribute;
 
 typedef struct
 {
@@ -118,8 +124,6 @@ typedef struct
 	size_t			attribute_slab_pos;
 
 	tg_hashtable		*patterns;
-
-	tg_hashtable		*attributes;
 }
 tg_domain;
 
@@ -197,7 +201,8 @@ void tg_transformer_free(tg_transformer *transformer);
 
 
 void tg_attribute_json_index(tg_hashtable *index, tg_jsonfile *json_file);
-void tg_attribute_index(tg_domain *domain, tg_hashtable *index);
+tg_attribute *tg_attribute_get(tg_domain *domain);
+void tg_attribute_free(tg_attribute *attribute);
 
 
 #endif	/* _TEXTGLASS_H_INCLUDED_ */

@@ -220,6 +220,8 @@ size_t tg_hashtable_size(tg_hashtable *hashtable)
 	{
 		bucket = &hashtable->buckets[i];
 
+		assert(bucket->magic == TG_HASHTABLE_BUCKET_MAGIC);
+
 		size+=bucket->size;
 	}
 

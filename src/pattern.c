@@ -12,6 +12,7 @@ tg_pattern *tg_pattern_alloc()
 	pattern->pattern_token_init = 0;
 	pattern->malloc = 1;
 	pattern->ref_count = 0;
+	pattern->attribute = NULL;
 
 	return pattern;
 }
@@ -33,6 +34,7 @@ tg_pattern *tg_pattern_get(tg_domain *domain)
 	pattern->pattern_token_init = 0;
 	pattern->malloc = 0;
 	pattern->ref_count = 0;
+	pattern->attribute = NULL;
 
 	domain->pattern_slab_pos++;
 
@@ -251,6 +253,11 @@ void tg_pattern_free(tg_pattern *pattern)
 	if(pattern->pattern_token_init)
 	{
 		tg_list_free(&pattern->pattern_tokens);
+	}
+
+	if(pattern->attribute)
+	{
+		tg_attribute_free(pattern->attribute);
 	}
 
 	pattern->magic = 0;

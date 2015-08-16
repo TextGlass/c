@@ -1,8 +1,6 @@
 #include "textglass.h"
 
 static tg_attribute *tg_attribute_alloc();
-static tg_attribute *tg_attribute_get(tg_domain *domain);
-void tg_attribute_free(tg_attribute *attribute);
 
 void tg_attribute_json_index(tg_hashtable *index, tg_jsonfile *json_file)
 {
@@ -20,7 +18,7 @@ void tg_attribute_json_index(tg_hashtable *index, tg_jsonfile *json_file)
 
 	if(TG_JSON_IS_OBJECT(tokens))
 	{
-		tg_printd(2, "Found %d attribute(s)\n", tokens->size);
+		tg_printd(2, "Found %d attribute(s) in file\n", tokens->size);
 
 		for(i = 1; i < tokens[0].skip; i++)
 		{
@@ -33,21 +31,6 @@ void tg_attribute_json_index(tg_hashtable *index, tg_jsonfile *json_file)
 			i+= tokens[i].skip;
 		}
 	}
-}
-
-void tg_attribute_index(tg_domain *domain, tg_hashtable *index)
-{
-	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
-	assert(index && index->magic == TG_HASHTABLE_MAGIC);
-	
-	domain->attribute_slab_size = tg_hashtable_size(index);
-	domain->attribute_slab_pos = 0;
-
-	domain->attribute_slab = calloc(domain->attribute_slab_size, sizeof(tg_attribute));
-
-	assert(domain->attribute_slab);
-
-	domain->attributes = tg_hashtable_alloc(domain->attribute_slab_size + 1, (TG_FREE)&tg_attribute_free);
 }
 
 static tg_attribute *tg_attribute_alloc()
@@ -64,7 +47,7 @@ static tg_attribute *tg_attribute_alloc()
 	return attribute;
 }
 
-static tg_attribute *tg_attribute_get(tg_domain *domain)
+tg_attribute *tg_attribute_get(tg_domain *domain)
 {
 	tg_attribute *attribute;
 
