@@ -1,13 +1,13 @@
 #include "textglass.h"
 
-static tg_transformer *tg_t_lowercase_alloc(tg_list *transformers, jsmntok_t *token);
+static tg_transformer *tg_t_lowercase_alloc(jsmntok_t *token);
 char *tg_t_lowercase(tg_list *free_list, tg_transformer *transformer, char *input);
 
-static tg_transformer *tg_t_uppercase_alloc(tg_list *transformers, jsmntok_t *token);
+static tg_transformer *tg_t_uppercase_alloc(jsmntok_t *token);
 char *tg_t_uppercase(tg_list *free_list, tg_transformer *transformer, char *input);
 
-static tg_transformer *tg_t_replaceall_alloc(tg_list *transformers, jsmntok_t *token);
-static tg_transformer *tg_t_replacefirst_alloc(tg_list *transformers, jsmntok_t *token);
+static tg_transformer *tg_t_replaceall_alloc(jsmntok_t *token);
+static tg_transformer *tg_t_replacefirst_alloc(jsmntok_t *token);
 char *tg_t_replaceall(tg_list *free_list, tg_transformer *transformer, char *input);
 
 tg_list *tg_transformer_compile(jsmntok_t *tokens)
@@ -37,39 +37,47 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens)
 
 			if(!strcmp(type, "LowerCase"))
 			{
-				transformer = tg_t_lowercase_alloc(transformers, token);
+				transformer = tg_t_lowercase_alloc(token);
 
 				if(!transformer)
 				{
 					goto terror;
 				}
+
+				tg_list_add(transformers, transformer);
 			}
 			else if(!strcmp(type, "UpperCase"))
 			{
-				transformer = tg_t_uppercase_alloc(transformers, token);
+				transformer = tg_t_uppercase_alloc(token);
 
 				if(!transformer)
 				{
 					goto terror;
 				}
+
+				tg_list_add(transformers, transformer);
 			}
 			else if(!strcmp(type, "ReplaceAll"))
 			{
-				transformer = tg_t_replaceall_alloc(transformers, token);
+				transformer = tg_t_replaceall_alloc(token);
 
 				if(!transformer)
 				{
 					goto terror;
 				}
+
+				tg_list_add(transformers, transformer);
 			}
 			else if(!strcmp(type, "ReplaceFirst"))
 			{
-				transformer = tg_t_replacefirst_alloc(transformers, token);
+				transformer = tg_t_replacefirst_alloc(token);
 
 				if(!transformer)
 				{
 					goto terror;
 				}
+
+				tg_list_add(transformers, transformer);
 			}
 			else
 			{
@@ -111,20 +119,16 @@ void tg_transformer_free(tg_transformer *transformer)
 	free(transformer);
 }
 
-static tg_transformer *tg_t_lowercase_alloc(tg_list *transformers, jsmntok_t *token)
+static tg_transformer *tg_t_lowercase_alloc(jsmntok_t *token)
 {
 	tg_transformer *lowercase;
 	const char *type;
-	
-	assert(transformers && transformers->magic == TG_LIST_MAGIC);
 
 	type = tg_json_get_str(token, "type");
 
 	assert(!strcmp(type, "LowerCase"));
 
 	lowercase = tg_transformer_alloc();
-
-	tg_list_add(transformers, lowercase);
 
 	lowercase->transformer = &tg_t_lowercase;
 
@@ -149,20 +153,16 @@ char *tg_t_lowercase(tg_list *free_list, tg_transformer *transformer, char *inpu
 	return input;
 }
 
-static tg_transformer *tg_t_uppercase_alloc(tg_list *transformers, jsmntok_t *token)
+static tg_transformer *tg_t_uppercase_alloc(jsmntok_t *token)
 {
 	tg_transformer *uppercase;
 	const char *type;
-
-	assert(transformers && transformers->magic == TG_LIST_MAGIC);
 
 	type = tg_json_get_str(token, "type");
 
 	assert(!strcmp(type, "UpperCase"));
 
 	uppercase = tg_transformer_alloc();
-
-	tg_list_add(transformers, uppercase);
 
 	uppercase->transformer = &tg_t_uppercase;
 
@@ -187,21 +187,17 @@ char *tg_t_uppercase(tg_list *free_list, tg_transformer *transformer, char *inpu
 	return input;
 }
 
-static tg_transformer *tg_t_replaceall_alloc(tg_list *transformers, jsmntok_t *token)
+static tg_transformer *tg_t_replaceall_alloc( jsmntok_t *token)
 {
 	tg_transformer *replaceall;
 	jsmntok_t *parameters;
 	const char *type;
-
-	assert(transformers && transformers->magic == TG_LIST_MAGIC);
 
 	type = tg_json_get_str(token, "type");
 
 	assert(!strcmp(type, "ReplaceAll"));
 
 	replaceall = tg_transformer_alloc();
-
-	tg_list_add(transformers, replaceall);
 
 	replaceall->transformer = &tg_t_replaceall;
 	replaceall->i1 = 0;
@@ -217,6 +213,7 @@ static tg_transformer *tg_t_replaceall_alloc(tg_list *transformers, jsmntok_t *t
 	if(!replaceall->s1 || !replaceall->s2 || !replaceall->s1[0])
 	{
 		fprintf(stderr, "Invalid ReplaceAll transformer\n");
+		tg_transformer_free(replaceall);
 		return NULL;
 	}
 
@@ -226,21 +223,17 @@ static tg_transformer *tg_t_replaceall_alloc(tg_list *transformers, jsmntok_t *t
 	return replaceall;
 }
 
-static tg_transformer *tg_t_replacefirst_alloc(tg_list *transformers, jsmntok_t *token)
+static tg_transformer *tg_t_replacefirst_alloc(jsmntok_t *token)
 {
 	tg_transformer *replacefirst;
 	jsmntok_t *parameters;
 	const char *type;
-
-	assert(transformers && transformers->magic == TG_LIST_MAGIC);
 
 	type = tg_json_get_str(token, "type");
 
 	assert(!strcmp(type, "ReplaceFirst"));
 
 	replacefirst = tg_transformer_alloc();
-
-	tg_list_add(transformers, replacefirst);
 
 	replacefirst->transformer = &tg_t_replaceall;
 	replacefirst->i1 = 1;
@@ -255,7 +248,8 @@ static tg_transformer *tg_t_replacefirst_alloc(tg_list *transformers, jsmntok_t 
 
 	if(!replacefirst->s1 || !replacefirst->s2 || !replacefirst->s1[0])
 	{
-		fprintf(stderr, "Invalid ReplaceAll transformer\n");
+		fprintf(stderr, "Invalid ReplaceFirst transformer\n");
+		tg_transformer_free(replacefirst);
 		return NULL;
 	}
 
@@ -305,7 +299,7 @@ char *tg_t_replaceall(tg_list *free_list, tg_transformer *transformer, char *inp
 	}
 	else
 	{
-		dest_len = input_len + 1 + ((replace_with_len - find_len) * 2);
+		dest_len = input_len + 1 + ((replace_with_len - find_len) * 10);
 		dest = malloc(dest_len);
 
 		assert(dest);
