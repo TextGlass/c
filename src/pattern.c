@@ -65,7 +65,7 @@ tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 
 	if(!value)
 	{
-		fprintf(stderr, "Invalid patternType]\n");
+		fprintf(stderr, "Invalid patternType\n");
 		goto perror;
 	}
 	else if(!strcmp(value, "Simple"))
