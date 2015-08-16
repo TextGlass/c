@@ -77,6 +77,15 @@ tg_pattern;
 typedef struct
 {
 	unsigned int		magic;
+#define TG_ATTRIBUTE_MAGIC	0xF45A0AC2
+
+	int			malloc:1;
+}
+tg_attribute;
+
+typedef struct
+{
+	unsigned int		magic;
 #define TG_DOMAIN_MAGIC		0x4C3A041E
 
 	tg_jsonfile		*pattern;
@@ -104,7 +113,13 @@ typedef struct
 	size_t			pattern_slab_size;
 	size_t			pattern_slab_pos;
 
+	tg_attribute		*attribute_slab;
+	size_t			attribute_slab_size;
+	size_t			attribute_slab_pos;
+
 	tg_hashtable		*patterns;
+
+	tg_hashtable		*attributes;
 }
 tg_domain;
 
@@ -179,6 +194,10 @@ void tg_pattern_free(tg_pattern *pattern);
 
 tg_list *tg_transformer_compile(jsmntok_t *tokens);
 void tg_transformer_free(tg_transformer *transformer);
+
+
+void tg_attribute_json_index(tg_hashtable *index, tg_jsonfile *json_file);
+void tg_attribute_index(tg_domain *domain, tg_hashtable *index);
 
 
 #endif	/* _TEXTGLASS_H_INCLUDED_ */

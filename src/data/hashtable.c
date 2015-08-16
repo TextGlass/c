@@ -209,6 +209,23 @@ int tg_hashtable_delete(tg_hashtable *hashtable, const char *key)
 	return ret;
 }
 
+size_t tg_hashtable_size(tg_hashtable *hashtable)
+{
+	size_t i, size = 0;
+	tg_hashtable_bucket *bucket;
+
+	assert(hashtable && hashtable->magic == TG_HASHTABLE_MAGIC);
+
+	for(i = 0; i < hashtable->bucket_len; i++)
+	{
+		bucket = &hashtable->buckets[i];
+
+		size+=bucket->size;
+	}
+
+	return size;
+}
+
 void tg_hashtable_free(tg_hashtable *hashtable)
 {
 	tg_hashtable_bucket *bucket;

@@ -56,6 +56,7 @@ tg_hashtable *tg_hashtable_alloc(size_t buckets, void (*free)(void *value));
 void *tg_hashtable_get(tg_hashtable *hashtable, const char *key);
 void tg_hashtable_set(tg_hashtable *hashtable, const char *key, void *value);
 int tg_hashtable_delete(tg_hashtable *hashtable, const char *key);
+size_t tg_hashtable_size(tg_hashtable *hashtable);
 void tg_hashtable_free(tg_hashtable *hashtable);
 
 #endif  /* _TG_HASHTABLE_H_INCLUDED_ */

@@ -16,6 +16,7 @@ SOURCE= \
 	domain.c \
 	pattern.c \
 	classify.c \
+	attribute.c \
 	transformer.c \
 	json_file.c \
 	util.c \

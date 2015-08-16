@@ -86,6 +86,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch)
 {
 	tg_domain *domain;
+	tg_hashtable *attribute_index = NULL;
 	jsmntok_t *token, *tokens, *norm, *patch;
 	const char *field;
 	int i;
@@ -272,6 +273,17 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	tg_printd(1, "Found %ld pattern(s)\n", count + count2);
 
+	attribute_index = tg_hashtable_alloc(100, NULL);
+
+	tg_attribute_json_index(attribute_index, domain->pattern);
+	tg_attribute_json_index(attribute_index, domain->pattern_patch);
+	tg_attribute_json_index(attribute_index, domain->attribute);
+	tg_attribute_json_index(attribute_index, domain->attribute_patch);
+
+	tg_attribute_index(domain, attribute_index);
+
+	tg_hashtable_free(attribute_index);
+
 	tg_jsonfile_free_tokens(domain->pattern);
 	tg_jsonfile_free_tokens(domain->attribute);
 	tg_jsonfile_free_tokens(domain->pattern_patch);
@@ -280,6 +292,11 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	return domain;
 
 derror:
+	if(attribute_index)
+	{
+		tg_hashtable_free(attribute_index);
+	}
+
 	tg_domain_free(domain);
 
 	return NULL;
@@ -343,6 +360,16 @@ void tg_domain_free(tg_domain *domain)
 	}
 
 	assert(domain->magic == TG_DOMAIN_MAGIC);
+
+	if(domain->attributes)
+	{
+		tg_hashtable_free(domain->attributes);
+	}
+
+	if(domain->attribute_slab)
+	{
+		free(domain->attribute_slab);
+	}
 
 	if(domain->patterns)
 	{
