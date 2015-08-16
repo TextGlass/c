@@ -100,6 +100,27 @@ void *tg_list_get(tg_list *list, size_t index)
 	return NULL;
 }
 
+void *tg_list_get_from(tg_list_item *item, size_t index)
+{
+	assert(item);
+
+	while(item)
+	{
+		assert(item->magic == TG_LIST_ITEM_MAGIC);
+
+		if(!index)
+		{
+			return item->value;
+		}
+
+		index--;
+
+		item = TAILQ_NEXT(item, entry);
+	}
+
+	return NULL;
+}
+
 long tg_list_index_str(tg_list *list, char *value)
 {
 	long i = 0;

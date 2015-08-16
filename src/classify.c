@@ -80,7 +80,9 @@ const char *tg_classify(tg_domain *domain, const char *original)
 	classify->matched_tokens = tg_list_alloc(15, NULL);
 	classify->candidates = tg_list_alloc(15, NULL);
 
-	for(i = 0; i < tokens->size; i++)
+	i = 0;
+
+	TG_LIST_FOREACH(tokens, item)
 	{
 		for(j = domain->ngram_size; j > 0; j--)
 		{
@@ -91,9 +93,9 @@ const char *tg_classify(tg_domain *domain, const char *original)
 
 			ngram_pos = 0;
 
-			for(k = i; k < i + j; k++)
+			for(k = 0; k < j; k++)
 			{
-				token = (char*)tg_list_get(tokens, k);
+				token = (char*)tg_list_get_from(item, k);
 
 				token_length = strlen(token);
 
@@ -111,6 +113,8 @@ const char *tg_classify(tg_domain *domain, const char *original)
 				goto cmatch_over;
 			}
 		}
+
+		i++;
 	}
 cmatch_over:
 
