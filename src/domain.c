@@ -398,15 +398,7 @@ static tg_list *tg_domain_list_get(tg_domain *domain, void (*free)(void *item))
 
 	list = &domain->list_slab[domain->list_slab_pos];
 
-	list->magic = TG_LIST_MAGIC;
-	list->size = 0;
-	list->prealloc_len = TG_LIST_PREALLOC;
-	list->callback = free;
-	list->malloc = 0;
-
-	TAILQ_INIT(&list->head);
-
-	assert(!pthread_rwlock_init(&list->rwlock, NULL));
+	tg_list_init(list, 0, free);
 
 	domain->list_slab_pos++;
 

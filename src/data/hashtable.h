@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <pthread.h>
 
 #include "tree.h"
 
@@ -32,8 +31,6 @@ typedef struct
 #define	TG_HASHTABLE_BUCKET_MAGIC	0xA11FB208
 
 	tg_hashtable_rbtree		rbtree;
-
-	pthread_rwlock_t		rwlock;
 
 	size_t				size;
 	size_t				prealloc_len;

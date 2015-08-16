@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#include <pthread.h>
 #include <string.h>
 
 #include "queue.h"
@@ -34,8 +33,6 @@ typedef struct
 
 	void(*callback)			(void*);
 
-	pthread_rwlock_t		rwlock;
-
 	size_t				size;
 	size_t				prealloc_len;
 
@@ -44,14 +41,6 @@ typedef struct
 	tg_list_item			prealloc[TG_LIST_PREALLOC];
 }
 tg_list;
-
-
-#define TG_LIST_FOREACH_LOCK(list, var)			\
-	for (tg_list_rlock(list),			\
-		(var) = TAILQ_FIRST(&(list)->head);	\
-		tg_list_item_valid(var) ||		\
-		(tg_list_unlock(list) && 0);		\
-		(var) = TAILQ_NEXT((var), entry))
 
 #define TG_LIST_FOREACH(list, var)			\
 	for ((var) = TAILQ_FIRST(&(list)->head);	\

@@ -23,8 +23,6 @@ tg_list *tg_list_alloc(size_t initial_len, void (*free)(void *item))
 
 	TAILQ_INIT(&list->head);
 
-	assert(!pthread_rwlock_init(&list->rwlock, NULL));
-
 	return list;
 }
 
@@ -39,8 +37,6 @@ void tg_list_init(tg_list * list, size_t initial_len, void (*free)(void *item))
 	list->malloc = 0;
 
 	TAILQ_INIT(&list->head);
-
-	assert(!pthread_rwlock_init(&list->rwlock, NULL));
 }
 
 static tg_list_item *tg_list_item_alloc(tg_list *list)
@@ -76,8 +72,6 @@ void tg_list_add(tg_list *list, void *value)
 	assert(list && list->magic == TG_LIST_MAGIC);
 	assert(value);
 
-	assert(!pthread_rwlock_wrlock(&list->rwlock));
-
 	add = tg_list_item_alloc(list);
 
 	add->value = value;
@@ -85,8 +79,6 @@ void tg_list_add(tg_list *list, void *value)
 	TAILQ_INSERT_TAIL(&list->head, add, entry);
 
 	list->size++;
-
-	assert(!pthread_rwlock_unlock(&list->rwlock));
 }
 
 void *tg_list_get(tg_list *list, size_t index)
@@ -141,31 +133,11 @@ int tg_list_item_valid(tg_list_item *item)
 	return 1;
 }
 
-int tg_list_rlock(tg_list *list)
-{
-	assert(list && list->magic == TG_LIST_MAGIC);
-
-	assert(!pthread_rwlock_rdlock(&list->rwlock));
-
-	return 1;
-}
-
-int tg_list_unlock(tg_list *list)
-{
-	assert(list && list->magic == TG_LIST_MAGIC);
-	
-	assert(!pthread_rwlock_unlock(&list->rwlock));
-
-	return 1;
-}
-
 void tg_list_free(tg_list *list)
 {
 	tg_list_item *item, *next;
 
 	assert(list && list->magic == TG_LIST_MAGIC);
-
-	assert(!pthread_rwlock_wrlock(&list->rwlock));
 
 	TAILQ_FOREACH_SAFE(item, &list->head, entry, next) {
 		TAILQ_REMOVE(&list->head, item, entry);
@@ -192,10 +164,6 @@ void tg_list_free(tg_list *list)
 	TAILQ_INIT(&list->head);
 
 	list->magic = 0;
-
-	assert(!pthread_rwlock_unlock(&list->rwlock));
-
-	assert(!pthread_rwlock_destroy(&list->rwlock));
 
 	if(list->malloc)
 	{

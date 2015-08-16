@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-O3 -Wall -g -fPIC -I. -Idata -Ijsmn
 LDFLAGS=
-LIBFLAGS=-lpthread
+LIBFLAGS=
 RM=rm -f
 
 INCLUDES=textglass.h data/tree.h data/queue.h data/list.h data/hashtable.h jsmn/jsmn.h
