@@ -3,7 +3,10 @@
 static void tg_classify_match(tg_classified *classify, const char *token);
 static void tg_classify_free(tg_classified *classify);
 
-const char *tg_classify(tg_domain *domain, const char *original)
+static tg_result *tg_result_alloc();
+static tg_classified *tg_classified_alloc(const tg_domain *domain);
+
+tg_result *tg_classify(const tg_domain *domain, const char *original)
 {
 	char *input, *ngram, *token;
 	tg_transformer *transformer;
@@ -14,14 +17,10 @@ const char *tg_classify(tg_domain *domain, const char *original)
 	size_t i, j, k, ngram_pos;
 	int rank, wrank;
 	tg_pattern *winner = NULL, *candidate;
+	tg_result *result;
 
-	classify = calloc(1, sizeof(tg_classified));
-
-	assert(classify);
-
-	classify->magic = TG_CLASSIFIED_MAGIC;
-	classify->domain = domain;
-	classify->free_list = tg_list_alloc(15, (TG_FREE)&free);
+	result = tg_result_alloc();
+	classify = tg_classified_alloc(domain);
 
 	input = strdup(original);
 
@@ -152,18 +151,22 @@ const char *tg_classify(tg_domain *domain, const char *original)
 
 	if(winner)
 	{
-		return winner->pattern_id;
+		result->pattern_id = winner->pattern_id;
 	}
 	else
 	{
-		return domain->default_id;
+		result->pattern_id = domain->default_id;
 	}
+
+	return result;
 
 cerror:
 	tg_list_free(tokens);
 	tg_classify_free(classify);
 
-	return domain->default_id;
+	result->pattern_id = domain->default_id;
+
+	return result;
 }
 
 static void tg_classify_match(tg_classified *classify, const char *token)
@@ -200,6 +203,43 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 	}
 
 	return;
+}
+
+static tg_result *tg_result_alloc()
+{
+	tg_result *result;
+
+	result = malloc(sizeof(tg_result));
+
+	assert(result);
+
+	result->magic = TG_RESULT_MAGIC;
+
+	return result;
+}
+
+void tg_result_free(tg_result *result)
+{
+	assert(result && result->magic == TG_RESULT_MAGIC);
+
+	result->magic = 0;
+
+	free(result);
+}
+
+static tg_classified *tg_classified_alloc(const tg_domain *domain)
+{
+	tg_classified *classified;
+
+	classified = calloc(1, sizeof(tg_classified));
+
+	assert(classified);
+
+	classified->magic = TG_CLASSIFIED_MAGIC;
+	classified->domain = domain;
+	classified->free_list = tg_list_alloc(15, (TG_FREE)&free);
+
+	return classified;
 }
 
 static void tg_classify_free(tg_classified *classify)

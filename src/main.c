@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 	char *attribute_patch = NULL;
 	char *test_string = NULL;
 	char *option, buf[128];
-	const char *result;
+	tg_result *result;
 	tg_jsonfile *test_file;
 	tg_domain *domain = NULL;
 	int i, exit = 0;
@@ -163,10 +163,14 @@ int main(int argc, char **argv)
 
 		result = tg_classify(domain, test_string);
 
+		assert(result);
+
 		clock_gettime(CLOCK_REALTIME, &end);
 		tg_time_diff(&end, &start, &diff);
 
-		tg_printd(0, "Test result: %s\n", result);
+		tg_printd(0, "Test result: %s\n", result->pattern_id);
+
+		tg_result_free(result);
 
 		tg_printd(0, "Test time: %lds %ldms %ld.%ldus\n",
 			diff.tv_sec, diff.tv_nsec/1000000, diff.tv_nsec/1000%1000, diff.tv_nsec%1000);
@@ -200,7 +204,7 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 {
 	jsmntok_t *tests, *test;
 	const char *input;
-	const char *result;
+	tg_result *result;
 	const char *expected;
 	int i;
 	int errors = 0;
@@ -233,22 +237,30 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 			if(input)
 			{
 				tg_printd(2, "Test input: '%s'\n", input);
+
 				result = tg_classify(domain, input);
-				if(!result && !expected)
+
+				assert(result);
+
+				if(!result->pattern_id && !expected)
 				{
 					tg_printd(2, "PASS: null\n");
+					tg_result_free(result);
 					continue;
 				}
-				else if(!result || !expected || strcmp(result, expected))
+				else if(!result->pattern_id || !expected || strcmp(result->pattern_id, expected))
 				{
-					tg_printd(2, "FAILED: expected patternId: %s, got: %s\n", expected, result);
+					tg_printd(2, "FAILED: expected patternId: %s, got: %s\n", expected, result->pattern_id);
+					tg_result_free(result);
 					errors++;
 					continue;
 				}
 
 				//TODO check attributes
 
-				tg_printd(2, "PASS: %s\n", result);
+				tg_printd(2, "PASS: %s\n", result->pattern_id);
+
+				tg_result_free(result);
 			}
 		}
 	}

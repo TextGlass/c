@@ -132,7 +132,7 @@ typedef struct
 	unsigned int		magic;
 #define TG_CLASSIFIED_MAGIC	0x5B8A23EF
 
-	tg_domain		*domain;
+	const tg_domain		*domain;
 
 	tg_list			*matched_tokens;
 	tg_list			*candidates;
@@ -155,6 +155,15 @@ typedef struct tg_transformer
 	int			i2;
 }
 tg_transformer;
+
+typedef struct
+{
+	unsigned int		magic;
+#define TG_RESULT_MAGIC		0xAB9D213A
+
+	const char		*pattern_id;
+}
+tg_result;
 
 
 #define TG_FREE				void(*)(void*)
@@ -185,7 +194,8 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 void tg_domain_free(tg_domain *domain);
 
 
-const char *tg_classify(tg_domain *domain, const char *original);
+tg_result *tg_classify(const tg_domain *domain, const char *original);
+void tg_result_free(tg_result *result);
 
 
 tg_pattern *tg_pattern_alloc();
