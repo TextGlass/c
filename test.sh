@@ -1,6 +1,7 @@
 #!/bin/bash
 
-BINARY=src/textglass_client
+BINARY="src/textglass_client"
+#VALGRIND="valgrind --leak-check=full --error-exitcode=1"
 
 if [ ! -f "$BINARY" ]
 then
@@ -55,7 +56,7 @@ do
     AP=`find $DROOT -type f | grep attribute | grep patch | sort | sed "s/^/-ap /" | xargs echo`
     T=`find $DROOT -type f | grep test | sort | sed "s/^/-t /" | xargs echo`
 
-    CMD="`echo $BINARY $P $PP $A $AP $T -q`"
+    CMD="`echo $VALGRIND $BINARY $P $PP $A $AP $T -q`"
 
     echo "CMD: $CMD"
 

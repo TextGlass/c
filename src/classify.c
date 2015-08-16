@@ -1,6 +1,6 @@
 #include "textglass.h"
 
-static int tg_classify_match(tg_classified *classify, const char *token);
+static void tg_classify_match(tg_classified *classify, const char *token);
 static void tg_classify_free(tg_classified *classify);
 
 const char *tg_classify(tg_domain *domain, const char *original)
@@ -108,15 +108,11 @@ const char *tg_classify(tg_domain *domain, const char *original)
 
 			tg_printd(3, "Ngram: '%s'\n", ngram);
 
-			if(tg_classify_match(classify, ngram))
-			{
-				goto cmatch_over;
-			}
+			tg_classify_match(classify, ngram);
 		}
 
 		i++;
 	}
-cmatch_over:
 
 	//FIND THE WINNER
 
@@ -170,7 +166,7 @@ cerror:
 	return domain->default_id;
 }
 
-static int tg_classify_match(tg_classified *classify, const char *token)
+static void tg_classify_match(tg_classified *classify, const char *token)
 {
 	tg_list *patterns;
 	tg_list_item *item;
@@ -203,7 +199,7 @@ static int tg_classify_match(tg_classified *classify, const char *token)
 		}
 	}
 
-	return 0;
+	return;
 }
 
 static void tg_classify_free(tg_classified *classify)
