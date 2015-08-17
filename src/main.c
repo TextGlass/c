@@ -21,6 +21,7 @@ int main(int argc, char **argv)
 	tg_jsonfile *test_file;
 	tg_domain *domain = NULL;
 	int i, exit = 0;
+	size_t j;
 	struct timespec start, end, diff;
 
 	tg_printd(0, "TextGlass C Client %s\n", TEXTGLASS_VERSION);
@@ -169,6 +170,11 @@ int main(int argc, char **argv)
 		tg_time_diff(&end, &start, &diff);
 
 		tg_printd(0, "Test result: %s\n", result->pattern_id);
+
+		for(j = 0; j < result->key_len; j++)
+		{
+			tg_printd(1, "Test attribute: '%s'='%s'\n", result->keys[j], result->values[j]);
+		}
 
 		tg_result_free(result);
 

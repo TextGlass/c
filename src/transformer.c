@@ -23,7 +23,7 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens)
 
 	if(TG_JSON_IS_ARRAY(tokens))
 	{
-		for(i = 1; i < tokens[0].skip; i++)
+		for(i = 1; i < tokens[0].skip; i+= tokens[i].skip + 1)
 		{
 			token = &tokens[i];
 
@@ -84,8 +84,6 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens)
 				fprintf(stderr, "Transformer not found: %s\n", type);
 				goto terror;
 			}
-
-			i+= tokens[i].skip;
 		}
 	}
 	

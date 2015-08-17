@@ -235,6 +235,16 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	tg_printd(1, "Found %zu attribute(s)\n", tg_hashtable_size(domain->attribute_index));
 
+	if(domain->default_id)
+	{
+		domain->default_attributes = tg_attribute_build(domain, domain->default_id);
+
+		if(!domain->default_attributes)
+		{
+			goto derror;
+		}
+	}
+
 	//PATTERN INDEX
 
 	count = 0;
@@ -310,7 +320,7 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 
 	if(TG_JSON_IS_ARRAY(tokens))
 	{
-		for(i = 1; i < tokens[0].skip; i++)
+		for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1)
 		{
 			token = &tokens[i];
 
@@ -323,7 +333,9 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 				return -1;
 			}
 
-			if(tg_attribute_build(domain, pattern))
+			pattern->attribute = tg_attribute_build(domain, pattern->pattern_id);
+
+			if(!pattern->attribute)
 			{
 				return -1;
 			}
@@ -346,8 +358,6 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 
 				count++;
 			}
-
-			i+= tokens[i].skip;
 		}
 	}
 
@@ -387,6 +397,11 @@ void tg_domain_free(tg_domain *domain)
 	if(domain->attribute_index)
 	{
 		tg_hashtable_free(domain->attribute_index);
+	}
+
+	if(domain->default_attributes)
+	{
+		tg_attribute_free(domain->default_attributes);
 	}
 
 	if(domain->input_transformers)

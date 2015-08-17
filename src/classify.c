@@ -3,7 +3,7 @@
 static void tg_classify_match(tg_classified *classify, const char *token);
 static void tg_classify_free(tg_classified *classify);
 
-static tg_result *tg_result_alloc();
+static tg_result *tg_result_alloc(tg_attribute *attributes);
 static tg_classified *tg_classified_alloc(const tg_domain *domain);
 
 tg_result *tg_classify(const tg_domain *domain, const char *original)
@@ -19,7 +19,6 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 	tg_pattern *winner = NULL, *candidate;
 	tg_result *result;
 
-	result = tg_result_alloc();
 	classify = tg_classified_alloc(domain);
 
 	input = strdup(original);
@@ -151,11 +150,16 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 	if(winner)
 	{
-		result->pattern_id = winner->pattern_id;
+		result = tg_result_alloc(winner->attribute);
 	}
 	else
 	{
-		result->pattern_id = domain->default_id;
+		result = tg_result_alloc(domain->default_attributes);
+
+		if(!domain->default_attributes)
+		{
+			result->pattern_id = domain->default_id;
+		}
 	}
 
 	return result;
@@ -164,7 +168,8 @@ cerror:
 	tg_list_free(tokens);
 	tg_classify_free(classify);
 
-	result->pattern_id = domain->default_id;
+	result = tg_result_alloc(NULL);
+	result->error_code = 1;
 
 	return result;
 }
@@ -205,15 +210,52 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 	return;
 }
 
-static tg_result *tg_result_alloc()
+static tg_result *tg_result_alloc(tg_attribute *attributes)
 {
 	tg_result *result;
+	size_t key_len = 0, pos;
+	tg_list_item *item;
 
-	result = malloc(sizeof(tg_result));
+	if(attributes)
+	{
+		assert(attributes->magic == TG_ATTRIBUTE_MAGIC);
+		assert(attributes->key_len == attributes->value_len + attributes->transformers->size);
+		key_len = attributes->key_len;
+	}
+
+	result = calloc(1, sizeof(tg_result) + (sizeof(char*) * key_len * 2));
 
 	assert(result);
 
 	result->magic = TG_RESULT_MAGIC;
+	result->key_len = key_len;
+	result->keys = result->buf;
+	result->values = &result->buf[result->key_len];
+
+	if(attributes)
+	{
+		result->pattern_id = attributes->pattern_id;
+
+		memcpy(result->keys, attributes->keys, attributes->key_len * sizeof(char*));
+		memcpy(result->values, attributes->values, attributes->value_len * sizeof(char*));
+	}
+
+	if(attributes && attributes->transformers)
+	{
+		assert(attributes->transformers->magic == TG_LIST_MAGIC);
+
+		if(attributes->transformers->size)
+		{
+			result->free_list = tg_list_alloc(attributes->transformers->size * 3, (TG_FREE)free);
+		}
+
+		pos = attributes->value_len;
+
+		TG_LIST_FOREACH(attributes->transformers, item)
+		{
+			result->values[pos++] = "TODO";
+		}
+	}
 
 	return result;
 }
@@ -223,6 +265,11 @@ void tg_result_free(tg_result *result)
 	assert(result && result->magic == TG_RESULT_MAGIC);
 
 	result->magic = 0;
+
+	if(result->free_list)
+	{
+		tg_list_free(result->free_list);
+	}
 
 	free(result);
 }

@@ -174,15 +174,13 @@ jsmntok_t *tg_json_get(jsmntok_t *tokens, const char *field)
 		return NULL;
 	}
 
-	for(i = 1; i < tokens[0].skip; i++)
+	for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1)
 	{
 		if(TG_JSON_IS_STRING(&tokens[i]) && !strcmp(tokens[i].str, field) &&
 			tokens[i].size == 1)
 		{
 			return &tokens[i + 1];
 		}
-
-		i+= tokens[i].skip;
 	}
 
 	return NULL;
@@ -211,14 +209,12 @@ jsmntok_t *tg_json_array_get(jsmntok_t *tokens, int index)
 		return NULL;
 	}
 
-	for(i = 1; i < tokens[0].skip; i++, index--)
+	for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1, index--)
 	{
 		if(!index)
 		{
 			return &tokens[i];
 		}
-
-		i+= tokens[i].skip;
 	}
 
 	return NULL;
