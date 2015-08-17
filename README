@@ -1,1 +1,5 @@
 TextGlass C Client
+
+TODO:
+-remove ints, favor longs or something
+-cleanup file "objects"

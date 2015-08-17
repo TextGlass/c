@@ -1,5 +1,7 @@
 #include "textglass.h"
 
+static void tg_pattern_init(tg_pattern *pattern);
+
 tg_pattern *tg_pattern_alloc()
 {
 	tg_pattern *pattern;
@@ -8,11 +10,9 @@ tg_pattern *tg_pattern_alloc()
 
 	assert(pattern);
 
-	pattern->magic = TG_PATTERN_MAGIC;
-	pattern->pattern_token_init = 0;
+	tg_pattern_init(pattern);
+
 	pattern->malloc = 1;
-	pattern->ref_count = 0;
-	pattern->attribute = NULL;
 
 	return pattern;
 }
@@ -30,15 +30,22 @@ tg_pattern *tg_pattern_get(tg_domain *domain)
 
 	pattern = &domain->pattern_slab[domain->pattern_slab_pos];
 
-	pattern->magic = TG_PATTERN_MAGIC;
-	pattern->pattern_token_init = 0;
-	pattern->malloc = 0;
-	pattern->ref_count = 0;
-	pattern->attribute = NULL;
+	tg_pattern_init(pattern);
 
 	domain->pattern_slab_pos++;
 
 	return pattern;
+}
+
+static void tg_pattern_init(tg_pattern *pattern)
+{
+	assert(pattern);
+
+	pattern->magic = TG_PATTERN_MAGIC;
+	pattern->pattern_tokens_init = 0;
+	pattern->malloc = 0;
+	pattern->ref_count = 0;
+	pattern->attribute.magic = 0;
 }
 
 tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
@@ -88,12 +95,12 @@ tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 		goto perror;
 	}
 
-	tg_printd(3, "  Found patternType: %s\n", value);
+	tg_printd(4, "Found patternType: %s\n", value);
 
 	//PATTERN TOKENS
 
 	tg_list_init(&pattern->pattern_tokens, 0, NULL);
-	pattern->pattern_token_init = 1;
+	pattern->pattern_tokens_init = 1;
 
 	token = tg_json_get(tokens, "patternTokens");
 
@@ -101,7 +108,7 @@ tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 	{
 		for(i = 0; i < token->size; i++)
 		{
-			tg_printd(3, "  Found patternToken: '%s'\n", token[i + 1].str);
+			tg_printd(4, "Found patternToken: '%s'\n", token[i + 1].str);
 
 			tg_list_add(&pattern->pattern_tokens, (void*)token[i + 1].str);
 		}
@@ -139,7 +146,7 @@ tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 		goto perror;
 	}
 
-	tg_printd(3, "  Found rankType: %s\n", value);
+	tg_printd(4, "Found rankType: %s\n", value);
 
 	//RANK VALUE
 
@@ -158,7 +165,7 @@ tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 		}
 	}
 
-	tg_printd(3, "  Found rankValue: %d\n", pattern->rank_value);
+	tg_printd(4, "Found rankValue: %d\n", pattern->rank_value);
 
 	return pattern;
 
@@ -250,14 +257,14 @@ void tg_pattern_free(tg_pattern *pattern)
 		return;
 	}
 
-	if(pattern->pattern_token_init)
+	if(pattern->pattern_tokens_init)
 	{
 		tg_list_free(&pattern->pattern_tokens);
 	}
 
-	if(pattern->attribute)
+	if(pattern->attribute.magic)
 	{
-		tg_attribute_free(pattern->attribute);
+		tg_attribute_free(&pattern->attribute);
 	}
 
 	pattern->magic = 0;

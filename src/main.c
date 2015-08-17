@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 		}
 		else if(!strcmp(option, "-vv"))
 		{
-			tg_printd_debug_level = 3;
+			tg_printd_debug_level = 5;
 		}
 		else
 		{

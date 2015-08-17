@@ -86,7 +86,6 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch)
 {
 	tg_domain *domain;
-	tg_hashtable *attribute_index = NULL;
 	jsmntok_t *token, *tokens, *norm, *patch;
 	const char *field;
 	int i;
@@ -227,21 +226,14 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	//ATTRIBUTE INDEX
 
-	attribute_index = tg_hashtable_alloc(100, NULL);
+	domain->attribute_index = tg_hashtable_alloc(100, NULL);
 
-	tg_attribute_json_index(attribute_index, domain->pattern);
-	tg_attribute_json_index(attribute_index, domain->pattern_patch);
-	tg_attribute_json_index(attribute_index, domain->attribute);
-	tg_attribute_json_index(attribute_index, domain->attribute_patch);
+	tg_attribute_json_index(domain, domain->pattern);
+	tg_attribute_json_index(domain, domain->pattern_patch);
+	tg_attribute_json_index(domain, domain->attribute);
+	tg_attribute_json_index(domain, domain->attribute_patch);
 
-	domain->attribute_slab_size = tg_hashtable_size(attribute_index);
-	domain->attribute_slab_pos = 0;
-
-	domain->attribute_slab = calloc(domain->attribute_slab_size, sizeof(tg_attribute));
-
-	assert(domain->attribute_slab);
-
-	tg_printd(1, "Found %zu attribute(s)\n", domain->attribute_slab_size);
+	tg_printd(1, "Found %zu attribute(s)\n", tg_hashtable_size(domain->attribute_index));
 
 	//PATTERN INDEX
 
@@ -291,7 +283,8 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	tg_printd(1, "Found %ld pattern(s)\n", count + count2);
 
-	tg_hashtable_free(attribute_index);
+	tg_hashtable_free(domain->attribute_index);
+	domain->attribute_index = NULL;
 
 	tg_jsonfile_free_tokens(domain->pattern);
 	tg_jsonfile_free_tokens(domain->attribute);
@@ -301,11 +294,6 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	return domain;
 
 derror:
-	if(attribute_index)
-	{
-		tg_hashtable_free(attribute_index);
-	}
-
 	tg_domain_free(domain);
 
 	return NULL;
@@ -335,7 +323,7 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 				return -1;
 			}
 
-			//TODO add attributes here
+			tg_attribute_build(domain, pattern);
 
 			TG_LIST_FOREACH(&pattern->pattern_tokens, item)
 			{
@@ -351,7 +339,7 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 
 				pattern->ref_count++;
 
-				tg_printd(3, "  Adding %s to pindex '%s'\n", pattern->pattern_id, (char*)item->value);
+				tg_printd(4, "Adding %s to pindex '%s'\n", pattern->pattern_id, (char*)item->value);
 
 				count++;
 			}
@@ -372,11 +360,6 @@ void tg_domain_free(tg_domain *domain)
 
 	assert(domain->magic == TG_DOMAIN_MAGIC);
 
-	if(domain->attribute_slab)
-	{
-		free(domain->attribute_slab);
-	}
-
 	if(domain->patterns)
 	{
 		tg_hashtable_free(domain->patterns);
@@ -396,6 +379,11 @@ void tg_domain_free(tg_domain *domain)
 	{
 		free(domain->token_seperators);
 		domain->token_seperator_len = 0;
+	}
+
+	if(domain->attribute_index)
+	{
+		tg_hashtable_free(domain->attribute_index);
 	}
 
 	if(domain->input_transformers)

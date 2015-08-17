@@ -1,8 +1,8 @@
 #include "textglass.h"
 
-static tg_attribute *tg_attribute_alloc();
+static void tg_attribute_init(tg_attribute *attribute);
 
-void tg_attribute_json_index(tg_hashtable *index, tg_jsonfile *json_file)
+void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file)
 {
 	jsmntok_t *tokens, *token;
 	int i;
@@ -13,6 +13,8 @@ void tg_attribute_json_index(tg_hashtable *index, tg_jsonfile *json_file)
 	}
 
 	assert(json_file->magic == TG_JSONFILE_MAGIC);
+	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
+	assert(domain->attribute_index && domain->attribute_index->magic == TG_HASHTABLE_MAGIC);
 
 	tokens = tg_json_get(json_file->tokens, "attributes");
 
@@ -26,46 +28,46 @@ void tg_attribute_json_index(tg_hashtable *index, tg_jsonfile *json_file)
 
 			tg_printd(3, "Found attribute: %s\n", token->str);
 
-			tg_hashtable_set(index, token->str, token);
+			tg_hashtable_set(domain->attribute_index, token->str, &tokens[i + 1]);
 
 			i+= tokens[i].skip;
 		}
 	}
 }
 
-static tg_attribute *tg_attribute_alloc()
+void tg_attribute_build(tg_domain *domain, tg_pattern *pattern)
 {
-	tg_attribute *attribute;
+	jsmntok_t *tokens;
 
-	attribute = malloc(sizeof(tg_attribute));
+	assert(pattern && pattern->magic == TG_PATTERN_MAGIC);
+	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
+	assert(domain->attribute_index && domain->attribute_index->magic == TG_HASHTABLE_MAGIC);
 
-	assert(attribute);
+	tg_attribute_init(&pattern->attribute);
 
-	attribute->magic = TG_ATTRIBUTE_MAGIC;
-	attribute->malloc = 1;
+	pattern->attribute.pattern = (struct tg_pattern*)pattern;
 
-	return attribute;
+	tokens = tg_hashtable_get(domain->attribute_index, pattern->pattern_id);
+
+	if(!TG_JSON_IS_OBJECT(tokens))
+	{
+		tg_printd(4, "Building default attributes for %s\n", pattern->pattern_id);
+	}
+	else
+	{
+		tg_printd(4, "Building attributes for %s\n", pattern->pattern_id);
+	}
 }
 
-tg_attribute *tg_attribute_get(tg_domain *domain)
+static void tg_attribute_init(tg_attribute *attribute)
 {
-	tg_attribute *attribute;
+	assert(attribute);
 
-	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
-
-	if(domain->attribute_slab_pos >= domain->attribute_slab_size)
-	{
-		return tg_attribute_alloc();
-	}
-
-	attribute = &domain->attribute_slab[domain->attribute_slab_pos];
+	memset(attribute, 0, sizeof(tg_attribute));
 
 	attribute->magic = TG_ATTRIBUTE_MAGIC;
-	attribute->malloc = 0;
 
-	domain->attribute_slab_pos++;
-
-	return attribute;
+	tg_list_init(&attribute->transformers, 0, (TG_FREE)&tg_list_free);
 }
 
 void tg_attribute_free(tg_attribute *attribute)
@@ -73,6 +75,8 @@ void tg_attribute_free(tg_attribute *attribute)
 	assert(attribute && attribute->magic == TG_ATTRIBUTE_MAGIC);
 
 	attribute->magic = 0;
+
+	tg_list_free(&attribute->transformers);
 
 	if(attribute->malloc)
 	{

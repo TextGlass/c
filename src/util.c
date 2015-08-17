@@ -9,16 +9,9 @@ void tg_printd(int level, const char* fmt,...)
 
 	if(level <= tg_printd_debug_level)
 	{
-		if(level == 1)
+		while(level-- > 0)
 		{
 			printf("  ");
-		}
-		else if(level == 2)
-		{
-			printf("    ");
-		} else if(level == 3)
-		{
-			printf("      ");
 		}
 
 		va_start(ap, fmt);

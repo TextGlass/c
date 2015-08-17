@@ -39,7 +39,7 @@ tg_jsonfile;
 
 typedef enum
 {
-	TG_RANKTYPE_NONE =0,
+	TG_RANKTYPE_NONE = 0,
 	TG_RANKTYPE_WEAK = 1,
 	TG_RANKTYPE_STRONG = 2
 }
@@ -63,6 +63,13 @@ typedef struct
 	struct tg_pattern	*pattern;
 
 	int			malloc:1;
+
+	char			**keys;
+	char			**values;
+
+	size_t			value_len;
+
+	tg_list			transformers;
 }
 tg_attribute;
 
@@ -81,11 +88,11 @@ typedef struct
 	tg_list			pattern_tokens;
 
 	int			malloc:1;
-	int			pattern_token_init:1;
+	int			pattern_tokens_init:1;
 
 	unsigned long		ref_count;
 
-	tg_attribute		*attribute;
+	tg_attribute		attribute;
 }
 tg_pattern;
 
@@ -119,11 +126,9 @@ typedef struct
 	size_t			pattern_slab_size;
 	size_t			pattern_slab_pos;
 
-	tg_attribute		*attribute_slab;
-	size_t			attribute_slab_size;
-	size_t			attribute_slab_pos;
-
 	tg_hashtable		*patterns;
+
+	tg_hashtable		*attribute_index;
 }
 tg_domain;
 
@@ -168,7 +173,9 @@ typedef struct
 	const char		**keys;
 	const char		**values;
 
-	const char		**buf;
+	size_t			key_len;
+
+	const char		*buf[0];
 }
 tg_result;
 
@@ -217,8 +224,8 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens);
 void tg_transformer_free(tg_transformer *transformer);
 
 
-void tg_attribute_json_index(tg_hashtable *index, tg_jsonfile *json_file);
-tg_attribute *tg_attribute_get(tg_domain *domain);
+void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file);
+void tg_attribute_build(tg_domain *domain, tg_pattern *pattern);
 void tg_attribute_free(tg_attribute *attribute);
 
 
