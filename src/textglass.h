@@ -70,6 +70,8 @@ typedef struct
 
 	tg_list			*transformers;
 
+	const char		**default_values;
+
 	const char		*buf[0];
 }
 tg_attribute;
