@@ -1,5 +1,7 @@
 TextGlass C Client
 
 TODO:
+-parent attributes
+-attribute transformers
 -remove ints, favor longs or something
 -cleanup file "objects"
