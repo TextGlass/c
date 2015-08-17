@@ -45,7 +45,7 @@ static void tg_pattern_init(tg_pattern *pattern)
 	pattern->pattern_tokens_init = 0;
 	pattern->malloc = 0;
 	pattern->ref_count = 0;
-	pattern->attribute.magic = 0;
+	pattern->attribute = NULL;
 }
 
 tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
@@ -262,9 +262,9 @@ void tg_pattern_free(tg_pattern *pattern)
 		tg_list_free(&pattern->pattern_tokens);
 	}
 
-	if(pattern->attribute.magic)
+	if(pattern->attribute)
 	{
-		tg_attribute_free(&pattern->attribute);
+		tg_attribute_free(pattern->attribute);
 	}
 
 	pattern->magic = 0;

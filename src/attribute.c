@@ -1,6 +1,6 @@
 #include "textglass.h"
 
-static void tg_attribute_init(tg_attribute *attribute);
+static tg_attribute *tg_attribute_alloc();
 
 void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file)
 {
@@ -35,39 +35,56 @@ void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file)
 	}
 }
 
-void tg_attribute_build(tg_domain *domain, tg_pattern *pattern)
+int tg_attribute_build(tg_domain *domain, tg_pattern *pattern)
 {
+	tg_list *keys, *values, *transformer_keys, *transformers;
 	jsmntok_t *tokens;
 
 	assert(pattern && pattern->magic == TG_PATTERN_MAGIC);
 	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
 	assert(domain->attribute_index && domain->attribute_index->magic == TG_HASHTABLE_MAGIC);
 
-	tg_attribute_init(&pattern->attribute);
-
-	pattern->attribute.pattern = (struct tg_pattern*)pattern;
+	keys = tg_list_alloc(20, NULL);
+	values = tg_list_alloc(20, NULL);
+	transformer_keys = tg_list_alloc(10, NULL);
+	transformers = tg_list_alloc(10, (TG_FREE)&tg_list_free);
 
 	tokens = tg_hashtable_get(domain->attribute_index, pattern->pattern_id);
 
-	if(!TG_JSON_IS_OBJECT(tokens))
-	{
-		tg_printd(4, "Building default attributes for %s\n", pattern->pattern_id);
-	}
-	else
+	if(TG_JSON_IS_OBJECT(tokens))
 	{
 		tg_printd(4, "Building attributes for %s\n", pattern->pattern_id);
 	}
+
+	pattern->attribute = tg_attribute_alloc(1, 1);
+
+	pattern->attribute->pattern = (struct tg_pattern*)pattern;
+	pattern->attribute->transformers = transformers;
+
+	tg_list_free(keys);
+	tg_list_free(values);
+	tg_list_free(transformer_keys);
+
+	return 0;
 }
 
-static void tg_attribute_init(tg_attribute *attribute)
+static tg_attribute *tg_attribute_alloc(size_t keys, size_t values)
 {
+	tg_attribute *attribute;
+
+	attribute = calloc(1, sizeof(tg_attribute) + (sizeof(char*) * (keys + values)));
+
 	assert(attribute);
 
-	memset(attribute, 0, sizeof(tg_attribute));
-
 	attribute->magic = TG_ATTRIBUTE_MAGIC;
+	attribute->malloc = 1;
+	attribute->key_len = keys;
+	attribute->value_len = values;
+	attribute->keys = attribute->buf;
+	attribute->values = &attribute->buf[attribute->key_len];
+	attribute->transformers = NULL;
 
-	tg_list_init(&attribute->transformers, 0, (TG_FREE)&tg_list_free);
+	return attribute;
 }
 
 void tg_attribute_free(tg_attribute *attribute)
@@ -76,7 +93,7 @@ void tg_attribute_free(tg_attribute *attribute)
 
 	attribute->magic = 0;
 
-	tg_list_free(&attribute->transformers);
+	tg_list_free(attribute->transformers);
 
 	if(attribute->malloc)
 	{

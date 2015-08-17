@@ -67,9 +67,12 @@ typedef struct
 	char			**keys;
 	char			**values;
 
+	size_t			key_len;
 	size_t			value_len;
 
-	tg_list			transformers;
+	tg_list			*transformers;
+
+	char			*buf[0];
 }
 tg_attribute;
 
@@ -92,7 +95,7 @@ typedef struct
 
 	unsigned long		ref_count;
 
-	tg_attribute		attribute;
+	tg_attribute		*attribute;
 }
 tg_pattern;
 
@@ -225,7 +228,7 @@ void tg_transformer_free(tg_transformer *transformer);
 
 
 void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file);
-void tg_attribute_build(tg_domain *domain, tg_pattern *pattern);
+int tg_attribute_build(tg_domain *domain, tg_pattern *pattern);
 void tg_attribute_free(tg_attribute *attribute);
 
 

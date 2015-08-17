@@ -323,7 +323,10 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 				return -1;
 			}
 
-			tg_attribute_build(domain, pattern);
+			if(tg_attribute_build(domain, pattern))
+			{
+				return -1;
+			}
 
 			TG_LIST_FOREACH(&pattern->pattern_tokens, item)
 			{
