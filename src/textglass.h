@@ -37,6 +37,7 @@ typedef struct
 }
 tg_jsonfile;
 
+
 typedef enum
 {
 	TG_RANKTYPE_NONE = 0,
@@ -45,6 +46,7 @@ typedef enum
 }
 tg_rank_type;
 
+
 typedef enum
 {
 	TG_PATTERN_SIMPLE = 0,
@@ -52,6 +54,7 @@ typedef enum
 	TG_PATTERN_ORDERED_AND = 2
 }
 tg_pattern_type;
+
 
 typedef struct
 {
@@ -76,6 +79,7 @@ typedef struct
 }
 tg_attribute;
 
+
 typedef struct
 {
 	unsigned int		magic;
@@ -98,6 +102,7 @@ typedef struct
 	tg_attribute		*attribute;
 }
 tg_pattern;
+
 
 typedef struct
 {
@@ -136,6 +141,7 @@ typedef struct
 }
 tg_domain;
 
+
 typedef struct
 {
 	unsigned int		magic;
@@ -149,6 +155,7 @@ typedef struct
 	tg_list			*free_list;
 }
 tg_classified;
+
 
 typedef struct tg_transformer
 {
@@ -164,6 +171,7 @@ typedef struct tg_transformer
 	int			i2;
 }
 tg_transformer;
+
 
 typedef struct
 {

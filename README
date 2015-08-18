@@ -1,6 +1,8 @@
 TextGlass C Client
 
 TODO:
+-asserts
+-comments
 -remove ints, favor longs or something
 -strtoll
 -cleanup file "objects"

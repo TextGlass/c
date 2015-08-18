@@ -2,52 +2,6 @@
 
 static void tg_pattern_init(tg_pattern *pattern);
 
-tg_pattern *tg_pattern_alloc()
-{
-	tg_pattern *pattern;
-
-	pattern = malloc(sizeof(tg_pattern));
-
-	assert(pattern);
-
-	tg_pattern_init(pattern);
-
-	pattern->malloc = 1;
-
-	return pattern;
-}
-
-tg_pattern *tg_pattern_get(tg_domain *domain)
-{
-	tg_pattern *pattern;
-
-	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
-
-	if(domain->pattern_slab_pos >= domain->pattern_slab_size)
-	{
-		return tg_pattern_alloc();
-	}
-
-	pattern = &domain->pattern_slab[domain->pattern_slab_pos];
-
-	tg_pattern_init(pattern);
-
-	domain->pattern_slab_pos++;
-
-	return pattern;
-}
-
-static void tg_pattern_init(tg_pattern *pattern)
-{
-	assert(pattern);
-
-	pattern->magic = TG_PATTERN_MAGIC;
-	pattern->pattern_tokens_init = 0;
-	pattern->malloc = 0;
-	pattern->ref_count = 0;
-	pattern->attribute = NULL;
-}
-
 tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 {
 	const char *value;
@@ -243,6 +197,52 @@ int tg_pattern_rank(tg_pattern *pattern)
 	}
 
 	return rank;
+}
+
+tg_pattern *tg_pattern_alloc()
+{
+	tg_pattern *pattern;
+
+	pattern = malloc(sizeof(tg_pattern));
+
+	assert(pattern);
+
+	tg_pattern_init(pattern);
+
+	pattern->malloc = 1;
+
+	return pattern;
+}
+
+tg_pattern *tg_pattern_get(tg_domain *domain)
+{
+	tg_pattern *pattern;
+
+	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
+
+	if(domain->pattern_slab_pos >= domain->pattern_slab_size)
+	{
+		return tg_pattern_alloc();
+	}
+
+	pattern = &domain->pattern_slab[domain->pattern_slab_pos];
+
+	tg_pattern_init(pattern);
+
+	domain->pattern_slab_pos++;
+
+	return pattern;
+}
+
+static void tg_pattern_init(tg_pattern *pattern)
+{
+	assert(pattern);
+
+	pattern->magic = TG_PATTERN_MAGIC;
+	pattern->pattern_tokens_init = 0;
+	pattern->malloc = 0;
+	pattern->ref_count = 0;
+	pattern->attribute = NULL;
 }
 
 void tg_pattern_free(tg_pattern *pattern)

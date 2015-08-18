@@ -21,9 +21,9 @@ int main(int argc, char **argv)
 	tg_result *result;
 	tg_jsonfile *test_file;
 	tg_domain *domain = NULL;
+	struct timespec start, end, diff;
 	int i, exit = 0;
 	size_t j;
-	struct timespec start, end, diff;
 
 	tg_printd(0, "TextGlass C Client %s\n", TEXTGLASS_VERSION);
 
@@ -111,13 +111,13 @@ int main(int argc, char **argv)
 
 	domain = tg_domain_load(pattern, attribute, pattern_patch, attribute_patch);
 
+	clock_gettime(CLOCK_REALTIME, &end);
+	tg_time_diff(&end, &start, &diff);
+
 	if(!domain)
 	{
 		TG_MAIN_ERROR("Could not load domain\n");
 	}
-
-	clock_gettime(CLOCK_REALTIME, &end);
-	tg_time_diff(&end, &start, &diff);
 
 	tg_printd(0, "Domain load time: %lds %ldms %ld.%ldus\n",
            diff.tv_sec, diff.tv_nsec/1000000, diff.tv_nsec/1000%1000, diff.tv_nsec%1000);
@@ -165,10 +165,10 @@ int main(int argc, char **argv)
 
 		result = tg_classify(domain, test_string);
 
-		assert(result);
-
 		clock_gettime(CLOCK_REALTIME, &end);
 		tg_time_diff(&end, &start, &diff);
+
+		assert(result);
 
 		if(result->error_code)
 		{
@@ -190,8 +190,9 @@ int main(int argc, char **argv)
 			diff.tv_sec, diff.tv_nsec/1000000, diff.tv_nsec/1000%1000, diff.tv_nsec%1000);
 	}
 
-	//CLEANUP
 mdone:
+	//CLEANUP
+
 	tg_list_free(tests);
 
 	tg_domain_free(domain);
@@ -298,9 +299,9 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 
 static int tg_test_attributes(tg_result *result, jsmntok_t *attributes)
 {
-	int i;
-	size_t j;
 	const char *key, *value;
+	size_t j;
+	int i;
 
 	if(TG_JSON_IS_OBJECT(attributes))
 	{
@@ -309,7 +310,6 @@ static int tg_test_attributes(tg_result *result, jsmntok_t *attributes)
 			key = attributes[i].str;
 			value = attributes[i + 1].str;
 
-			tg_printd(3, "test: '%s'='%s'\n", key, value);
 			for(j = 0; j < result->key_len; j++)
 			{
 				if(!strcmp(result->keys[j], key))

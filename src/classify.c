@@ -8,16 +8,16 @@ static tg_classified *tg_classified_alloc(const tg_domain *domain);
 
 tg_result *tg_classify(const tg_domain *domain, const char *original)
 {
-	char *input, *ngram, *token;
 	tg_transformer *transformer;
-	size_t length, token_length;
 	tg_classified *classify;
 	tg_list *tokens = NULL;
 	tg_list_item *item;
-	size_t i, j, k, ngram_pos;
-	int rank, wrank;
 	tg_pattern *winner = NULL, *candidate;
 	tg_result *result;
+	char *input, *ngram, *token;
+	size_t length, token_length;
+	size_t i, j, k, ngram_pos;
+	int rank, wrank;
 
 	classify = tg_classified_alloc(domain);
 

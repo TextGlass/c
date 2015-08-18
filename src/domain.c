@@ -12,12 +12,13 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 	tg_jsonfile *attribute_file = NULL;
 	tg_jsonfile *pattern_patch_file = NULL;
 	tg_jsonfile *attribute_patch_file = NULL;
-	tg_domain *domain = NULL;
 
 	//PARSE ATTRIBUTE FILE
 
 	tg_printd(1, "Pattern file: %s\n", pattern);
+
 	pattern_file = tg_jsonfile_get(pattern);
+
 	if(!pattern_file || strcmp(pattern_file->type, "pattern"))
 	{
 		fprintf(stderr, "Invalid pattern file\n");
@@ -29,7 +30,9 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 	if(attribute)
 	{
 		tg_printd(1, "Attribute file: %s\n", attribute);
+
 		attribute_file = tg_jsonfile_get(attribute);
+
 		if(!attribute_file  || strcmp(attribute_file->type, "attribute") ||
 			strcmp(attribute_file->domain, pattern_file->domain) ||
 			strcmp(attribute_file->domain_version, pattern_file->domain_version))
@@ -44,7 +47,9 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 	if(pattern_patch)
 	{
 		tg_printd(1, "Pattern patch file: %s\n", pattern_patch);
+
 		pattern_patch_file = tg_jsonfile_get(pattern_patch);
+
 		if(!pattern_patch_file  || strcmp(pattern_patch_file->type, "patternPatch")  ||
 			strcmp(pattern_patch_file->domain, pattern_file->domain) ||
 			strcmp(pattern_patch_file->domain_version, pattern_file->domain_version))
@@ -59,7 +64,9 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 	if(attribute_patch)
 	{
 		tg_printd(1, "Attribute patch file: %s\n", attribute_patch);
+
 		attribute_patch_file = tg_jsonfile_get(attribute_patch);
+
 		if(!attribute_patch_file  || strcmp(attribute_patch_file->type, "attributePatch" ) ||
 			strcmp(attribute_patch_file->domain, pattern_file->domain) ||
 			strcmp(attribute_patch_file->domain_version, pattern_file->domain_version))
@@ -69,9 +76,7 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 		}
 	}
 
-	domain = tg_domain_init(pattern_file, attribute_file, pattern_patch_file, attribute_patch_file);
-
-	return domain;
+	return tg_domain_init(pattern_file, attribute_file, pattern_patch_file, attribute_patch_file);
 
 derror:
 	tg_jsonfile_free(pattern_file);
@@ -88,8 +93,8 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	tg_domain *domain;
 	jsmntok_t *token, *tokens, *norm, *patch;
 	const char *field;
-	int i;
 	long count, count2;
+	int i;
 
 	assert(pattern);
 
@@ -313,9 +318,9 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 {
 	jsmntok_t *token;
 	tg_pattern *pattern;
-	long count = 0;
 	tg_list *list;
 	tg_list_item *item;
+	long count = 0;
 	int i;
 
 	if(TG_JSON_IS_ARRAY(tokens))
@@ -349,6 +354,8 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 					list = tg_domain_list_get(domain, (TG_FREE)&tg_pattern_free);
 					tg_hashtable_set(domain->patterns, (char*)item->value, list);
 				}
+
+				assert(list->magic == TG_LIST_MAGIC);
 
 				tg_list_add(list, pattern);
 
