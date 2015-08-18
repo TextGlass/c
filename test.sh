@@ -1,7 +1,12 @@
 #!/bin/bash
 
 BINARY="src/textglass_client"
-VALGRIND="valgrind --leak-check=full --error-exitcode=1"
+
+if [ "$1" = "valgrind" ]
+then
+    VALGRIND="valgrind --leak-check=full --error-exitcode=1"
+    shift
+fi
 
 if [ ! -f "$BINARY" ]
 then
