@@ -4,6 +4,7 @@
 
 static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file);
 static void tg_printHelp();
+static int tg_test_attributes(tg_result *result, jsmntok_t *attributes);
 
 #define TG_MAIN_ERROR(msg) do {fprintf(stderr, "%s", msg); exit = 1; goto mdone; } while(0)
 
@@ -169,7 +170,14 @@ int main(int argc, char **argv)
 		clock_gettime(CLOCK_REALTIME, &end);
 		tg_time_diff(&end, &start, &diff);
 
-		tg_printd(0, "Test result: %s\n", result->pattern_id);
+		if(result->error_code)
+		{
+			tg_printd(0, "Test error: %d\n", result->error_code);
+		}
+		else
+		{
+			tg_printd(0, "Test result: %s\n", result->pattern_id);
+		}
 
 		for(j = 0; j < result->key_len; j++)
 		{
@@ -208,7 +216,7 @@ static void tg_printHelp()
 
 static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 {
-	jsmntok_t *tests, *test;
+	jsmntok_t *tests, *test, *attributes;
 	const char *input;
 	tg_result *result;
 	const char *expected;
@@ -248,7 +256,14 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 
 				assert(result);
 
-				if(!result->pattern_id && !expected)
+				if(result->error_code)
+				{
+					tg_printd(2, "FAILED: error_code=%d\n", result->error_code);
+					tg_result_free(result);
+					errors++;
+					continue;
+				}
+				else if(!result->pattern_id && !expected)
 				{
 					tg_printd(2, "PASS: null\n");
 					tg_result_free(result);
@@ -262,7 +277,14 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 					continue;
 				}
 
-				//TODO check attributes
+				attributes = tg_json_get(test, "resultAttributes");
+
+				if(tg_test_attributes(result, attributes))
+				{
+					tg_result_free(result);
+					errors++;
+					continue;
+				}
 
 				tg_printd(2, "PASS: %s\n", result->pattern_id);
 
@@ -272,4 +294,45 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 	}
 
 	return errors;
+}
+
+static int tg_test_attributes(tg_result *result, jsmntok_t *attributes)
+{
+	int i;
+	size_t j;
+	const char *key, *value;
+
+	if(TG_JSON_IS_OBJECT(attributes))
+	{
+		for(i = 1; i < attributes[0].skip; i += attributes[i].skip + 1)
+		{
+			key = attributes[i].str;
+			value = attributes[i + 1].str;
+
+			tg_printd(3, "test: '%s'='%s'\n", key, value);
+			for(j = 0; j < result->key_len; j++)
+			{
+				if(!strcmp(result->keys[j], key))
+				{
+					if(strcmp(result->values[j], value))
+					{
+						tg_printd(2, "FAILED: expected '%s'='%s', got: %s\n", key, value, result->values[j]);
+						return 1;
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+
+			if(j >= result->key_len)
+			{
+				tg_printd(2, "FAILED: expected '%s', not found\n", key);
+				return 1;
+			}
+		}
+	}
+
+	return 0;
 }
