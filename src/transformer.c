@@ -455,11 +455,15 @@ static tg_transformer *tg_t_isnumber_alloc(jsmntok_t *token)
 
 char *tg_t_isnumber(tg_list *free_list, tg_transformer *transformer, char *input)
 {
+	char *end;
+
 	assert(free_list && free_list->magic == TG_LIST_MAGIC);
 	assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
 	assert(input);
 
-	if(!atoll(input) && strcmp(input, "0"))
+	strtoll(input, &end, 10);
+
+	if(!*input || *end)
 	{
 		return NULL;
 	}

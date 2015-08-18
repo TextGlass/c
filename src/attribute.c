@@ -40,7 +40,7 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 	tg_list *transformer_keys, *transformers, *attribute_transformer;
 	tg_list *default_values;
 	tg_list_item *item;
-	const char *default_value;
+	const char *default_value, *parent;
 	jsmntok_t *ptokens, *tokens, *key, *value;
 	int i;
 	size_t pos;
@@ -54,17 +54,18 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 	transformers = tg_list_alloc(10, (TG_FREE)&tg_list_free);
 	default_values = tg_list_alloc(10, NULL);
 
-	ptokens = tg_hashtable_get(domain->attribute_index, pattern_id);
-
 	//ATTRIBUTES
 
-	tokens = tg_json_get(ptokens, "attributes");
+	ptokens = tg_hashtable_get(domain->attribute_index, pattern_id);
+	parent = pattern_id;
 
-	if(TG_JSON_IS_OBJECT(tokens))
+	while(parent)
 	{
-		tg_printd(4, "Building attributes for %s\n", pattern_id);
+		tg_printd(4, "Building attributes for %s\n", parent);
 
-		for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1)
+		tokens = tg_json_get(ptokens, "attributes");
+
+		for(i = 1;TG_JSON_IS_OBJECT(tokens) && i < tokens[0].skip; i += tokens[i].skip + 1)
 		{
 			key = &tokens[i];
 
@@ -75,22 +76,21 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 
 			value = &tokens[i + 1];
 
+			if(parent != pattern_id && tg_list_index_str(keys, key->str) >= 0)
+			{
+				continue;
+			}
+
 			tg_list_add(keys, (void*)key->str);
 			tg_list_add(values, (void*)value->str);
 
 			tg_printd(5, "Found attribute: '%s'='%s'\n", key->str, value->str);
 		}
-	}
 
-	//ATTRIBUTE TRANFORMERS
 
-	tokens = tg_json_get(ptokens, "attributeTransformers");
+		tokens = tg_json_get(ptokens, "attributeTransformers");
 
-	if(TG_JSON_IS_OBJECT(tokens))
-	{
-		tg_printd(4, "Building attribute transformers for %s\n", pattern_id);
-
-		for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1)
+		for(i = 1;TG_JSON_IS_OBJECT(tokens) && i < tokens[0].skip; i += tokens[i].skip + 1)
 		{
 			key = &tokens[i];
 
@@ -104,6 +104,11 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 			if(!TG_JSON_IS_OBJECT(value))
 			{
 				goto aerror;
+			}
+
+			if(parent != pattern_id && tg_list_index_str(transformer_keys, key->str) >= 0)
+			{
+				continue;
 			}
 
 			default_value = tg_json_get_str(value, "defaultValue");
@@ -136,6 +141,17 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 
 			tg_printd(5, "Found transformed attribute: '%s':%zu\n",
 				 key->str, attribute_transformer->size);
+		}
+
+		parent = tg_json_get_str(ptokens, "parentId");
+
+		if(parent)
+		{
+			ptokens = tg_hashtable_get(domain->attribute_index, parent);
+		}
+		else
+		{
+			ptokens = NULL;
 		}
 	}
 	

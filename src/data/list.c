@@ -121,7 +121,7 @@ void *tg_list_get_from(tg_list_item *item, size_t index)
 	return NULL;
 }
 
-long tg_list_index_str(tg_list *list, char *value)
+long tg_list_index_str(tg_list *list, const char *value)
 {
 	long i = 0;
 	tg_list_item *item;
