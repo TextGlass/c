@@ -15,7 +15,7 @@
 #include "jsmn.h"
 
 
-#define TEXTGLASS_VERSION		"1.0.0"
+#define TEXTGLASS_VERSION		"1.0.0 alpha"
 
 #define TG_DEBUG_LOGGING		1
 
