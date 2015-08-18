@@ -31,7 +31,8 @@ int main(int argc, char **argv)
 
 	//PARSE THE COMMAND LINE
 
-	for(i = 1; i < argc; i++) {
+	for(i = 1; i < argc; i++)
+	{
 		option = argv[i];
 
 		if(!strcmp(option, "-h"))
@@ -59,7 +60,7 @@ int main(int argc, char **argv)
 		{
 			if(pattern_patch)
 			{
-			      TG_MAIN_ERROR("pattern patch file already defined\n");
+				TG_MAIN_ERROR("pattern patch file already defined\n");
 			}
 			pattern_patch = argv[++i];
 		}
@@ -120,7 +121,7 @@ int main(int argc, char **argv)
 	}
 
 	tg_printd(0, "Domain load time: %lds %ldms %ld.%ldus\n",
-           diff.tv_sec, diff.tv_nsec/1000000, diff.tv_nsec/1000%1000, diff.tv_nsec%1000);
+		diff.tv_sec, diff.tv_nsec / 1000000, diff.tv_nsec / 1000 % 1000, diff.tv_nsec % 1000);
 
 	//DO THE TESTS
 
@@ -150,7 +151,7 @@ int main(int argc, char **argv)
 
 		tg_printd(0, "All tests passed\n");
 		tg_printd(0, "Test time: %lds %ldms %ld.%ldus\n",
-			diff.tv_sec, diff.tv_nsec/1000000, diff.tv_nsec/1000%1000, diff.tv_nsec%1000);
+			diff.tv_sec, diff.tv_nsec / 1000000, diff.tv_nsec / 1000 % 1000, diff.tv_nsec % 1000);
 
 		tg_jsonfile_free(test_file);
 	}
@@ -187,7 +188,7 @@ int main(int argc, char **argv)
 		tg_result_free(result);
 
 		tg_printd(0, "Test time: %lds %ldms %ld.%ldus\n",
-			diff.tv_sec, diff.tv_nsec/1000000, diff.tv_nsec/1000%1000, diff.tv_nsec%1000);
+			diff.tv_sec, diff.tv_nsec / 1000000, diff.tv_nsec / 1000 % 1000, diff.tv_nsec % 1000);
 	}
 
 mdone:
@@ -218,13 +219,16 @@ static void tg_printHelp()
 static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 {
 	jsmntok_t *tests, *test, *attributes;
-	const char *input;
 	tg_result *result;
 	const char *expected;
-	int i;
+	const char *input;
 	int errors = 0;
+	int i;
 
-	if(strcmp(test_file->type, "test" ) ||
+	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
+	assert(test_file && test_file->magic == TG_JSONFILE_MAGIC);
+
+	if(strcmp(test_file->type, "test") ||
 		strcmp(test_file->domain, domain->domain) ||
 		strcmp(test_file->domain_version, domain->domain_version))
 	{
@@ -236,10 +240,10 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 
 	if(TG_JSON_IS_ARRAY(tests))
 	{
-		for(i = 0; i < tests->size; i++)
+		for(i = 1; i < tests[0].skip; i += tests[i].skip + 1)
 		{
-			test = tg_json_array_get(tests, i);
-			
+			test = &tests[i];
+
 			input = tg_json_get_str(test, "input");
 			expected = tg_json_get_str(test, "resultPatternId");
 
@@ -302,6 +306,8 @@ static int tg_test_attributes(tg_result *result, jsmntok_t *attributes)
 	const char *key, *value;
 	size_t j;
 	int i;
+
+	assert(result && result->magic == TG_RESULT_MAGIC);
 
 	if(TG_JSON_IS_OBJECT(attributes))
 	{

@@ -199,7 +199,7 @@ tg_result;
 
 extern int tg_printd_debug_level;
 
-void tg_printd(int level, const char* fmt,...);
+void tg_printd(int level, const char* fmt, ...);
 void tg_time_diff(struct timespec *end, struct timespec *start, struct timespec *result);
 void tg_split(char *source, size_t source_len, const char **seps, int sep_length, tg_list *tokens);
 
@@ -209,7 +209,6 @@ void tg_jsonfile_free(tg_jsonfile *jsonfile);
 void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile);
 jsmntok_t *tg_json_get(jsmntok_t *tokens, const char *field);
 const char *tg_json_get_str(jsmntok_t *tokens, const char *field);
-jsmntok_t *tg_json_array_get(jsmntok_t *tokens, int index);
 
 #define TG_JSON_IS_OBJECT(token)	((token) && (token)->type == JSMN_OBJECT)
 #define TG_JSON_IS_STRING(token)	((token) && (token)->type == JSMN_STRING)

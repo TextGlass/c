@@ -18,7 +18,7 @@ tg_list *tg_list_alloc(size_t initial_len, void (*free)(void *item))
 	assert(list);
 
 	tg_list_init(list, initial_len, free);
-	
+
 	list->malloc = 1;
 
 	TAILQ_INIT(&list->head);
@@ -42,6 +42,8 @@ void tg_list_init(tg_list * list, size_t initial_len, void (*free)(void *item))
 static tg_list_item *tg_list_item_alloc(tg_list *list)
 {
 	tg_list_item *item;
+
+	assert(list && list->magic == TG_LIST_MAGIC);
 
 	if(list->size < list->prealloc_len)
 	{
@@ -148,7 +150,7 @@ int tg_list_item_valid(tg_list_item *item)
 	{
 		return 0;
 	}
-	
+
 	assert(item->magic == TG_LIST_ITEM_MAGIC);
 
 	return 1;
@@ -160,7 +162,8 @@ void tg_list_free(tg_list *list)
 
 	assert(list && list->magic == TG_LIST_MAGIC);
 
-	TAILQ_FOREACH_SAFE(item, &list->head, entry, next) {
+	TAILQ_FOREACH_SAFE(item, &list->head, entry, next)
+	{
 		TAILQ_REMOVE(&list->head, item, entry);
 
 		assert(item->magic == TG_LIST_ITEM_MAGIC);

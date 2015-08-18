@@ -1,12 +1,12 @@
 #include "textglass.h"
 
 static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
-		tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch);
+				 tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch);
 static tg_list *tg_domain_list_get(tg_domain *domain, void (*free)(void *item));
 static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens);
 
 tg_domain *tg_domain_load(const char *pattern, const char *attribute,
-		const char *pattern_patch, const char *attribute_patch)
+			  const char *pattern_patch, const char *attribute_patch)
 {
 	tg_jsonfile *pattern_file = NULL;
 	tg_jsonfile *attribute_file = NULL;
@@ -33,7 +33,7 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 
 		attribute_file = tg_jsonfile_get(attribute);
 
-		if(!attribute_file  || strcmp(attribute_file->type, "attribute") ||
+		if(!attribute_file || strcmp(attribute_file->type, "attribute") ||
 			strcmp(attribute_file->domain, pattern_file->domain) ||
 			strcmp(attribute_file->domain_version, pattern_file->domain_version))
 		{
@@ -50,7 +50,7 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 
 		pattern_patch_file = tg_jsonfile_get(pattern_patch);
 
-		if(!pattern_patch_file  || strcmp(pattern_patch_file->type, "patternPatch")  ||
+		if(!pattern_patch_file || strcmp(pattern_patch_file->type, "patternPatch") ||
 			strcmp(pattern_patch_file->domain, pattern_file->domain) ||
 			strcmp(pattern_patch_file->domain_version, pattern_file->domain_version))
 		{
@@ -67,7 +67,7 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 
 		attribute_patch_file = tg_jsonfile_get(attribute_patch);
 
-		if(!attribute_patch_file  || strcmp(attribute_patch_file->type, "attributePatch" ) ||
+		if(!attribute_patch_file || strcmp(attribute_patch_file->type, "attributePatch") ||
 			strcmp(attribute_patch_file->domain, pattern_file->domain) ||
 			strcmp(attribute_patch_file->domain_version, pattern_file->domain_version))
 		{
@@ -88,7 +88,7 @@ derror:
 }
 
 static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
-		tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch)
+				 tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch)
 {
 	tg_domain *domain;
 	jsmntok_t *token, *tokens, *norm, *patch;
@@ -169,7 +169,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		{
 			token = &tokens[i + 1];
 			domain->token_seperators[i] = token->str;
-			
+
 			tg_printd(2, "Found tokenSeperators: '%s'\n", token->str);
 		}
 
@@ -263,7 +263,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	{
 		count += patch[0].size;
 	}
-	
+
 	domain->patterns = tg_hashtable_alloc(count + 100, (TG_FREE)&tg_list_free);
 
 	tg_printd(3, "Pattern hash size: %ld\n", count);
@@ -323,6 +323,8 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 	long count = 0;
 	int i;
 
+	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
+	
 	if(TG_JSON_IS_ARRAY(tokens))
 	{
 		for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1)
@@ -398,7 +400,6 @@ void tg_domain_free(tg_domain *domain)
 	if(domain->token_seperators)
 	{
 		free(domain->token_seperators);
-		domain->token_seperator_len = 0;
 	}
 
 	if(domain->attribute_index)
@@ -415,7 +416,7 @@ void tg_domain_free(tg_domain *domain)
 	{
 		tg_list_free(domain->input_transformers);
 	}
-	
+
 	tg_jsonfile_free(domain->pattern);
 	tg_jsonfile_free(domain->attribute);
 	tg_jsonfile_free(domain->pattern_patch);

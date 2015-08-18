@@ -36,17 +36,18 @@ void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file)
 tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 {
 	tg_attribute *attribute = NULL;
+	jsmntok_t *ptokens, *tokens, *key, *value;
 	tg_list *keys, *values;
 	tg_list *transformer_keys, *transformers, *attribute_transformer;
 	tg_list *default_values;
 	tg_list_item *item;
-	const char *default_value, *parent;
-	jsmntok_t *ptokens, *tokens, *key, *value;
-	int i;
+	const char *default_value, *current;
 	size_t pos;
+	int i;
 
 	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
 	assert(domain->attribute_index && domain->attribute_index->magic == TG_HASHTABLE_MAGIC);
+	assert(pattern_id);
 
 	keys = tg_list_alloc(20, NULL);
 	values = tg_list_alloc(20, NULL);
@@ -57,15 +58,15 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 	//ATTRIBUTES
 
 	ptokens = tg_hashtable_get(domain->attribute_index, pattern_id);
-	parent = pattern_id;
+	current = pattern_id;
 
-	while(parent)
+	while(current)
 	{
-		tg_printd(4, "Building attributes for %s\n", parent);
+		tg_printd(4, "Building attributes for %s\n", current);
 
 		tokens = tg_json_get(ptokens, "attributes");
 
-		for(i = 1;TG_JSON_IS_OBJECT(tokens) && i < tokens[0].skip; i += tokens[i].skip + 1)
+		for(i = 1; TG_JSON_IS_OBJECT(tokens) && i < tokens[0].skip; i += tokens[i].skip + 1)
 		{
 			key = &tokens[i];
 
@@ -76,7 +77,7 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 
 			value = &tokens[i + 1];
 
-			if(parent != pattern_id && tg_list_index_str(keys, key->str) >= 0)
+			if(current != pattern_id && tg_list_index_str(keys, key->str) >= 0)
 			{
 				continue;
 			}
@@ -90,7 +91,7 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 
 		tokens = tg_json_get(ptokens, "attributeTransformers");
 
-		for(i = 1;TG_JSON_IS_OBJECT(tokens) && i < tokens[0].skip; i += tokens[i].skip + 1)
+		for(i = 1; TG_JSON_IS_OBJECT(tokens) && i < tokens[0].skip; i += tokens[i].skip + 1)
 		{
 			key = &tokens[i];
 
@@ -106,7 +107,7 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 				goto aerror;
 			}
 
-			if(parent != pattern_id && tg_list_index_str(transformer_keys, key->str) >= 0)
+			if(current != pattern_id && tg_list_index_str(transformer_keys, key->str) >= 0)
 			{
 				continue;
 			}
@@ -140,21 +141,21 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 			tg_list_add(transformers, attribute_transformer);
 
 			tg_printd(5, "Found transformed attribute: '%s':%zu\n",
-				 key->str, attribute_transformer->size);
+				key->str, attribute_transformer->size);
 		}
 
-		parent = tg_json_get_str(ptokens, "parentId");
+		current = tg_json_get_str(ptokens, "parentId");
 
-		if(parent)
+		if(current)
 		{
-			ptokens = tg_hashtable_get(domain->attribute_index, parent);
+			ptokens = tg_hashtable_get(domain->attribute_index, current);
 		}
 		else
 		{
 			ptokens = NULL;
 		}
 	}
-	
+
 	assert(keys->size == values->size);
 	assert(transformer_keys->size == transformers->size);
 	assert(transformers->size == default_values->size);
@@ -226,7 +227,7 @@ static tg_attribute *tg_attribute_alloc(size_t keys, size_t values)
 	assert(keys >= values);
 
 	attribute = calloc(1, sizeof(tg_attribute) + (sizeof(char*) * (keys + values)) +
-		(sizeof(char*) * (keys - values)));
+			(sizeof(char*) * (keys - values)));
 
 	assert(attribute);
 

@@ -133,10 +133,10 @@ perror:
 
 size_t tg_pattern_matched_length(tg_pattern *pattern, tg_list *matched_tokens)
 {
-	long last_found = -1, found;
-	size_t length = 0;
 	tg_list_item *item;
 	char *pattern_token;
+	size_t length = 0;
+	long last_found = -1, found;
 
 	assert(pattern && pattern->magic == TG_PATTERN_MAGIC);
 	assert(matched_tokens && matched_tokens->magic == TG_LIST_MAGIC);

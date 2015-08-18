@@ -21,9 +21,9 @@ char *tg_t_substring(tg_list *free_list, tg_transformer *transformer, char *inpu
 
 tg_list *tg_transformer_compile(jsmntok_t *tokens)
 {
+	tg_transformer *transformer;
 	tg_list *transformers;
 	jsmntok_t *token;
-	tg_transformer *transformer;
 
 	const char *type;
 	int i;
@@ -32,7 +32,7 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens)
 
 	if(TG_JSON_IS_ARRAY(tokens))
 	{
-		for(i = 1; i < tokens[0].skip; i+= tokens[i].skip + 1)
+		for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1)
 		{
 			token = &tokens[i];
 
@@ -62,7 +62,7 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens)
 			}
 			else if(!strcmp(type, "SplitAndGet"))
 			{
-				transformer = tg_t_splitget_alloc(token);				
+				transformer = tg_t_splitget_alloc(token);
 			}
 			else if(!strcmp(type, "IsNumber"))
 			{
@@ -86,12 +86,12 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens)
 			tg_list_add(transformers, transformer);
 		}
 	}
-	
+
 	return transformers;
-	
+
 terror:
 	tg_list_free(transformers);
-	
+
 	return NULL;
 }
 
@@ -124,7 +124,7 @@ static tg_transformer *tg_t_lowercase_alloc(jsmntok_t *token)
 
 	type = tg_json_get_str(token, "type");
 
-	assert(!strcmp(type, "LowerCase"));
+	assert(type && !strcmp(type, "LowerCase"));
 
 	lowercase = tg_transformer_alloc();
 
@@ -143,7 +143,7 @@ char *tg_t_lowercase(tg_list *free_list, tg_transformer *transformer, char *inpu
 
 	char *p;
 
-	for(p = input ; *p; p++)
+	for(p = input; *p; p++)
 	{
 		*p = tolower(*p);
 	}
@@ -158,7 +158,7 @@ static tg_transformer *tg_t_uppercase_alloc(jsmntok_t *token)
 
 	type = tg_json_get_str(token, "type");
 
-	assert(!strcmp(type, "UpperCase"));
+	assert(type && !strcmp(type, "UpperCase"));
 
 	uppercase = tg_transformer_alloc();
 
@@ -177,7 +177,7 @@ char *tg_t_uppercase(tg_list *free_list, tg_transformer *transformer, char *inpu
 
 	char *p;
 
-	for(p = input ; *p; p++)
+	for(p = input; *p; p++)
 	{
 		*p = toupper(*p);
 	}
@@ -185,7 +185,7 @@ char *tg_t_uppercase(tg_list *free_list, tg_transformer *transformer, char *inpu
 	return input;
 }
 
-static tg_transformer *tg_t_replaceall_alloc( jsmntok_t *token)
+static tg_transformer *tg_t_replaceall_alloc(jsmntok_t *token)
 {
 	tg_transformer *replaceall;
 	jsmntok_t *parameters;
@@ -193,7 +193,7 @@ static tg_transformer *tg_t_replaceall_alloc( jsmntok_t *token)
 
 	type = tg_json_get_str(token, "type");
 
-	assert(!strcmp(type, "ReplaceAll"));
+	assert(type && !strcmp(type, "ReplaceAll"));
 
 	replaceall = tg_transformer_alloc();
 
@@ -216,7 +216,7 @@ static tg_transformer *tg_t_replaceall_alloc( jsmntok_t *token)
 	}
 
 	tg_printd(5, "Found transformer: %s, find: '%s', replaceWith: '%s'\n",
-		 type, replaceall->s1, replaceall->s2);
+		type, replaceall->s1, replaceall->s2);
 
 	return replaceall;
 }
@@ -229,7 +229,7 @@ static tg_transformer *tg_t_replacefirst_alloc(jsmntok_t *token)
 
 	type = tg_json_get_str(token, "type");
 
-	assert(!strcmp(type, "ReplaceFirst"));
+	assert(type && !strcmp(type, "ReplaceFirst"));
 
 	replacefirst = tg_transformer_alloc();
 
@@ -252,7 +252,7 @@ static tg_transformer *tg_t_replacefirst_alloc(jsmntok_t *token)
 	}
 
 	tg_printd(5, "Found transformer: %s, find: '%s', replaceWith: '%s'\n",
-		 type, replacefirst->s1, replacefirst->s2);
+		type, replacefirst->s1, replacefirst->s2);
 
 	return replacefirst;
 }
@@ -314,11 +314,11 @@ char *tg_t_replaceall(tg_list *free_list, tg_transformer *transformer, char *inp
 			assert(dest != input);
 
 			dest_new_len = dest_len * 2;
-			
+
 			dest_new = malloc(dest_new_len);
-			
+
 			assert(dest_new);
-			
+
 			tg_list_add(free_list, dest_new);
 
 			memcpy(dest_new, dest, dest_len);
@@ -356,7 +356,7 @@ static tg_transformer *tg_t_splitget_alloc(jsmntok_t *token)
 
 	type = tg_json_get_str(token, "type");
 
-	assert(!strcmp(type, "SplitAndGet"));
+	assert(type && !strcmp(type, "SplitAndGet"));
 
 	splitget = tg_transformer_alloc();
 
@@ -387,7 +387,7 @@ static tg_transformer *tg_t_splitget_alloc(jsmntok_t *token)
 	}
 
 	tg_printd(5, "Found transformer: %s, delimiter: '%s', get: %d\n",
-		 type, splitget->s1, splitget->i1);
+		type, splitget->s1, splitget->i1);
 
 	return splitget;
 }
@@ -442,7 +442,7 @@ static tg_transformer *tg_t_isnumber_alloc(jsmntok_t *token)
 
 	type = tg_json_get_str(token, "type");
 
-	assert(!strcmp(type, "IsNumber"));
+	assert(type && !strcmp(type, "IsNumber"));
 
 	isnumber = tg_transformer_alloc();
 
@@ -479,7 +479,7 @@ static tg_transformer *tg_t_substring_alloc(jsmntok_t *token)
 
 	type = tg_json_get_str(token, "type");
 
-	assert(!strcmp(type, "Substring"));
+	assert(type && !strcmp(type, "Substring"));
 
 	substring = tg_transformer_alloc();
 
@@ -516,7 +516,7 @@ static tg_transformer *tg_t_substring_alloc(jsmntok_t *token)
 	}
 
 	tg_printd(5, "Found transformer: %s, start: %d, maxLength: %d\n",
-		 type, substring->i1, substring->i2);
+		type, substring->i1, substring->i2);
 
 	return substring;
 }
@@ -526,10 +526,10 @@ char *tg_t_substring(tg_list *free_list, tg_transformer *transformer, char *inpu
 	assert(free_list && free_list->magic == TG_LIST_MAGIC);
 	assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
 	assert(input);
-	
+
 	assert(transformer->i1 >= 0);
 	assert(transformer->i2 >= -1);
-	
+
 	if(transformer->i1 > strlen(input))
 	{
 		return NULL;

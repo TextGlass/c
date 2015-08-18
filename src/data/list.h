@@ -7,7 +7,9 @@
 
 #include "queue.h"
 
+
 #define TG_LIST_PREALLOC			3
+
 
 typedef struct tg_list_item
 {
@@ -22,7 +24,9 @@ typedef struct tg_list_item
 }
 tg_list_item;
 
+
 typedef TAILQ_HEAD(tg_list_head, tg_list_item) tg_list_head;
+
 
 typedef struct
 {
@@ -42,10 +46,12 @@ typedef struct
 }
 tg_list;
 
+
 #define TG_LIST_FOREACH(list, var)			\
 	for ((var) = TAILQ_FIRST(&(list)->head);	\
 		tg_list_item_valid(var);		\
 		(var) = TAILQ_NEXT((var), entry))
+
 
 tg_list *tg_list_alloc(size_t initial_len, void (*free)(void *item));
 void tg_list_init(tg_list * list, size_t initial_len, void (*free)(void *item));
@@ -57,5 +63,6 @@ void tg_list_free(tg_list *list);
 int tg_list_item_valid(tg_list_item *item);
 int tg_list_rlock(tg_list *list);
 int tg_list_unlock(tg_list *list);
+
 
 #endif  /* _TG_LIST_H_INCLUDED_ */

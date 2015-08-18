@@ -2,7 +2,7 @@
 
 int tg_printd_debug_level = 1;
 
-void tg_printd(int level, const char* fmt,...)
+void tg_printd(int level, const char* fmt, ...)
 {
 #if TG_DEBUG_LOGGING
 	va_list ap;
@@ -23,14 +23,16 @@ void tg_printd(int level, const char* fmt,...)
 
 void tg_time_diff(struct timespec *end, struct timespec *start, struct timespec *result)
 {
-    result->tv_sec = end->tv_sec - start->tv_sec;
-    result->tv_nsec = end->tv_nsec - start->tv_nsec;
+	assert(end && start && result);
 
-    if(result->tv_nsec < 0)
-    {
-      result->tv_sec--;
-      result->tv_nsec += (1000 * 1000 * 1000);
-    }
+	result->tv_sec = end->tv_sec - start->tv_sec;
+	result->tv_nsec = end->tv_nsec - start->tv_nsec;
+
+	if(result->tv_nsec < 0)
+	{
+		result->tv_sec--;
+		result->tv_nsec += (1000 * 1000 * 1000);
+	}
 }
 
 void tg_split(char *source, size_t source_len, const char **seps, int sep_length, tg_list *tokens)
@@ -43,17 +45,17 @@ void tg_split(char *source, size_t source_len, const char **seps, int sep_length
 
 	assert(tokens && tokens->magic == TG_LIST_MAGIC);
 
-	if(!seps)
+	if(!seps || !sep_length)
 	{
 		tg_list_add(tokens, source);
 		return;
 	}
 
-	source:
+source:
 	while(source_pos < source_len)
 	{
 		i = 0;
-		seperator:
+seperator:
 		for(; i < sep_length; i++)
 		{
 			sep = seps[i];

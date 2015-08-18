@@ -7,7 +7,9 @@
 
 #include "tree.h"
 
+
 #define TG_HASHTABLE_PREALLOC_LEN		2
+
 
 typedef struct tg_hashtable_key
 {
@@ -23,7 +25,9 @@ typedef struct tg_hashtable_key
 }
 tg_hashtable_key;
 
+
 typedef RB_HEAD(tg_hashtable_rbtree, tg_hashtable_key) tg_hashtable_rbtree;
+
 
 typedef struct
 {
@@ -39,6 +43,7 @@ typedef struct
 }
 tg_hashtable_bucket;
 
+
 typedef struct
 {
 	unsigned int			magic;
@@ -52,11 +57,13 @@ typedef struct
 }
 tg_hashtable;
 
+
 tg_hashtable *tg_hashtable_alloc(size_t buckets, void (*free)(void *value));
 void *tg_hashtable_get(tg_hashtable *hashtable, const char *key);
 void tg_hashtable_set(tg_hashtable *hashtable, const char *key, void *value);
 int tg_hashtable_delete(tg_hashtable *hashtable, const char *key);
 size_t tg_hashtable_size(tg_hashtable *hashtable);
 void tg_hashtable_free(tg_hashtable *hashtable);
+
 
 #endif  /* _TG_HASHTABLE_H_INCLUDED_ */

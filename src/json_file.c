@@ -85,7 +85,8 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 
 		parent = token;
 
-		while(parent->parent >= 0) {
+		while(parent->parent >= 0)
+		{
 			parent = &jsonfile->tokens[parent->parent];
 			parent->skip++;
 		}
@@ -110,7 +111,7 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 	}
 
 	tg_printd(1, "Loaded %s file, domain: %s, version: %s, json tokens: %d\n",
-		 jsonfile->type, jsonfile->domain, jsonfile->domain_version, jsonfile->token_len);
+		jsonfile->type, jsonfile->domain, jsonfile->domain_version, jsonfile->token_len);
 
 	return jsonfile;
 
@@ -133,12 +134,10 @@ void tg_jsonfile_free(tg_jsonfile *jsonfile)
 	}
 
 	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
-	
+
 	if(jsonfile->json)
 	{
 		free(jsonfile->json);
-		jsonfile->json_len = 0;
-		jsonfile->json = NULL;
 	}
 
 	tg_jsonfile_free_tokens(jsonfile);
@@ -156,7 +155,7 @@ void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile)
 	}
 
 	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
-	
+
 	if(jsonfile->tokens)
 	{
 		free(jsonfile->tokens);
@@ -168,6 +167,8 @@ void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile)
 jsmntok_t *tg_json_get(jsmntok_t *tokens, const char *field)
 {
 	int i;
+
+	assert(field);
 
 	if(!tokens || !TG_JSON_IS_OBJECT(tokens))
 	{
@@ -198,24 +199,4 @@ const char *tg_json_get_str(jsmntok_t *tokens, const char *field)
 	{
 		return token->str;
 	}
-}
-
-jsmntok_t *tg_json_array_get(jsmntok_t *tokens, int index)
-{
-	int i;
-
-	if(!tokens || !TG_JSON_IS_ARRAY(tokens))
-	{
-		return NULL;
-	}
-
-	for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1, index--)
-	{
-		if(!index)
-		{
-			return &tokens[i];
-		}
-	}
-
-	return NULL;
 }

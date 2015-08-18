@@ -10,23 +10,27 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 {
 	tg_transformer *transformer;
 	tg_classified *classify;
+	tg_pattern *winner, *candidate;
+	tg_result *result;
 	tg_list *tokens = NULL;
 	tg_list_item *item;
-	tg_pattern *winner = NULL, *candidate;
-	tg_result *result;
 	char *input, *ngram, *token;
 	size_t length, token_length;
 	size_t i, j, k, ngram_pos;
+	size_t winner_length;
 	int rank, wrank;
+
+	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
+	assert(original);
 
 	classify = tg_classified_alloc(domain);
 
 	input = strdup(original);
 
 	assert(input);
-	
+
 	tg_list_add(classify->free_list, input);
-	
+
 	length = strlen(input);
 
 	tg_printd(3, "Classify input on %s: '%s':%zu\n", domain->domain, input, length);
@@ -38,6 +42,8 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 		TG_LIST_FOREACH(domain->input_transformers, item)
 		{
 			transformer = (tg_transformer*)item->value;
+
+			assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
 
 			input = transformer->transformer(classify->free_list, transformer, input);
 
@@ -114,9 +120,13 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 	//FIND THE WINNER
 
+	winner = NULL;
+	winner_length = 0;
+
 	TG_LIST_FOREACH(classify->candidates, item)
 	{
 		candidate = (tg_pattern*)item->value;
+		
 		assert(candidate && candidate->magic == TG_PATTERN_MAGIC);
 
 		rank = tg_pattern_rank(candidate);
@@ -126,7 +136,7 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 		{
 			continue;
 		}
-		
+
 		i = tg_pattern_matched_length(candidate, classify->matched_tokens);
 
 		if(!i)
@@ -137,9 +147,10 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 		tg_printd(3, "Candidate: %s, rank=%d, matched=%zu\n", candidate->pattern_id, rank, i);
 
 		if(!winner || rank > wrank || (rank == wrank &&
-			i > tg_pattern_matched_length(winner, classify->matched_tokens)))
+			i > winner_length))
 		{
 			winner = candidate;
+			winner_length = i;
 		}
 	}
 
@@ -176,9 +187,9 @@ cerror:
 
 static void tg_classify_match(tg_classified *classify, const char *token)
 {
+	tg_pattern *candidate;
 	tg_list *patterns;
 	tg_list_item *item;
-	tg_pattern *candidate;
 	char *matched;
 
 	assert(classify && classify->magic == TG_CLASSIFIED_MAGIC);
@@ -191,7 +202,7 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 		matched = strdup(token);
 
 		tg_list_add(classify->free_list, matched);
-		
+
 		tg_list_add(classify->matched_tokens, matched);
 
 		TG_LIST_FOREACH(patterns, item)
@@ -203,7 +214,7 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 			tg_list_add(classify->candidates, candidate);
 
 			tg_printd(3, "Hit: '%s' patternId: %s\n", matched,
-				 candidate->pattern_id);
+				candidate->pattern_id);
 		}
 	}
 
@@ -213,11 +224,11 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
 {
 	tg_result *result;
-	size_t key_len = 0, pos, default_value_pos;
-	tg_list *attribute_transformer;
 	tg_transformer *transformer;
-	char *transformed;
+	tg_list *attribute_transformer;
 	tg_list_item *item, *item2;
+	char *transformed;
+	size_t key_len = 0, pos, default_value_pos;
 
 	if(attributes)
 	{
@@ -264,7 +275,7 @@ static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
 			assert(attribute_transformer && attribute_transformer->magic == TG_LIST_MAGIC);
 
 			tg_printd(4, "Transforming: '%s'\n", input);
-			
+
 			transformed = strdup(input);
 
 			assert(transformed);
@@ -313,6 +324,8 @@ void tg_result_free(tg_result *result)
 static tg_classified *tg_classified_alloc(const tg_domain *domain)
 {
 	tg_classified *classified;
+
+	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
 
 	classified = calloc(1, sizeof(tg_classified));
 
