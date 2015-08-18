@@ -3,7 +3,7 @@
 static void tg_classify_match(tg_classified *classify, const char *token);
 static void tg_classify_free(tg_classified *classify);
 
-static tg_result *tg_result_alloc(tg_attribute *attributes);
+static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input);
 static tg_classified *tg_classified_alloc(const tg_domain *domain);
 
 tg_result *tg_classify(const tg_domain *domain, const char *original)
@@ -150,11 +150,11 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 	if(winner)
 	{
-		result = tg_result_alloc(winner->attribute);
+		result = tg_result_alloc(winner->attribute, original);
 	}
 	else
 	{
-		result = tg_result_alloc(domain->default_attributes);
+		result = tg_result_alloc(domain->default_attributes, original);
 
 		if(!domain->default_attributes)
 		{
@@ -168,7 +168,7 @@ cerror:
 	tg_list_free(tokens);
 	tg_classify_free(classify);
 
-	result = tg_result_alloc(NULL);
+	result = tg_result_alloc(NULL, original);
 	result->error_code = 1;
 
 	return result;
@@ -210,11 +210,14 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 	return;
 }
 
-static tg_result *tg_result_alloc(tg_attribute *attributes)
+static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
 {
 	tg_result *result;
-	size_t key_len = 0, pos;
-	tg_list_item *item;
+	size_t key_len = 0, pos, default_value_pos;
+	tg_list *attribute_transformer;
+	tg_transformer *transformer;
+	char *transformed;
+	tg_list_item *item, *item2;
 
 	if(attributes)
 	{
@@ -222,6 +225,8 @@ static tg_result *tg_result_alloc(tg_attribute *attributes)
 		assert(attributes->key_len == attributes->value_len + attributes->transformers->size);
 		key_len = attributes->key_len;
 	}
+
+	assert(input);
 
 	result = calloc(1, sizeof(tg_result) + (sizeof(char*) * key_len * 2));
 
@@ -250,10 +255,41 @@ static tg_result *tg_result_alloc(tg_attribute *attributes)
 		}
 
 		pos = attributes->value_len;
+		default_value_pos = 0;
 
 		TG_LIST_FOREACH(attributes->transformers, item)
 		{
-			result->values[pos++] = "TODO";
+			attribute_transformer = item->value;
+
+			assert(attribute_transformer && attribute_transformer->magic == TG_LIST_MAGIC);
+
+			tg_printd(4, "Transforming: '%s'\n", input);
+			
+			transformed = strdup(input);
+
+			assert(transformed);
+
+			tg_list_add(result->free_list, transformed);
+
+			TG_LIST_FOREACH(attribute_transformer, item2)
+			{
+				transformer = (tg_transformer*)item2->value;
+
+				transformed = transformer->transformer(result->free_list, transformer, transformed);
+
+				if(!transformed)
+				{
+					tg_printd(4, "Transformer error\n");
+					transformed = (char*)attributes->default_values[default_value_pos];
+					break;
+				}
+
+				tg_printd(4, "Transformed: '%s'\n", transformed);
+			}
+
+			result->values[pos++] = transformed;
+
+			default_value_pos++;
 		}
 	}
 

@@ -36,7 +36,9 @@ void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file)
 tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 {
 	tg_attribute *attribute = NULL;
-	tg_list *keys, *values, *transformer_keys, *transformers, *default_values;
+	tg_list *keys, *values;
+	tg_list *transformer_keys, *transformers, *attribute_transformer;
+	tg_list *default_values;
 	tg_list_item *item;
 	const char *default_value;
 	jsmntok_t *ptokens, *tokens, *key, *value;
@@ -115,20 +117,31 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 				tg_list_add(default_values, (void*)default_value);
 			}
 
-			if(!TG_JSON_IS_ARRAY(tg_json_get(value, "transformers")))
+			value = tg_json_get(value, "transformers");
+
+			if(!TG_JSON_IS_ARRAY(value))
 			{
 				goto aerror;
 			}
 
-			tg_printd(5, "Found transformers: %s\n", tg_json_get_str(value, "transformers"));
+			attribute_transformer = tg_transformer_compile(value);
 
-			//TODO parse the transformers
+			if(!attribute_transformer)
+			{
+				goto aerror;
+			}
+
+			tg_list_add(transformer_keys, (void*)key->str);
+			tg_list_add(transformers, attribute_transformer);
+
+			tg_printd(5, "Found transformed attribute: '%s':%zu\n",
+				 key->str, attribute_transformer->size);
 		}
 	}
 	
 	assert(keys->size == values->size);
 	assert(transformer_keys->size == transformers->size);
-	//assert(transformers->size == default_values->size);
+	assert(transformers->size == default_values->size);
 
 	attribute = tg_attribute_alloc(keys->size + transformer_keys->size, values->size);
 
@@ -157,6 +170,15 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 	}
 
 	assert(pos == attribute->value_len);
+
+	pos = 0;
+
+	TG_LIST_FOREACH(default_values, item)
+	{
+		attribute->default_values[pos++] = (char*)item->value;
+	}
+
+	assert(pos == attribute->transformers->size);
 
 	tg_list_free(keys);
 	tg_list_free(values);
