@@ -176,7 +176,11 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 	return result;
 
 cerror:
-	tg_list_free(tokens);
+	if(tokens)
+	{
+		tg_list_free(tokens);
+	}
+
 	tg_classify_free(classify);
 
 	result = tg_result_alloc(NULL, original);

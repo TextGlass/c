@@ -20,7 +20,6 @@ DOMAINS=`find $ROOT -maxdepth 1 -type d | grep -v "domains$" | sort | xargs echo
 function error
 {
     echo "Please pass in a valid reference domain root"
-    echo "Or run ./test.sh from SVN"
     exit 1
 }
 
