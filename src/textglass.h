@@ -29,7 +29,7 @@ typedef struct
 	size_t			json_len;
 
 	jsmntok_t		*tokens;
-	int			token_len;
+	long			token_len;
 
 	const char		*type;
 	const char		*domain;
@@ -120,9 +120,9 @@ typedef struct
 	tg_list			*input_transformers;
 
 	const char		**token_seperators;
-	int			token_seperator_len;
+	long			token_seperator_len;
 
-	unsigned int		ngram_size;
+	unsigned long		ngram_size;
 
 	const char		*default_id;
 	tg_attribute		*default_attributes;
@@ -167,8 +167,8 @@ typedef struct tg_transformer
 	const char		*s1;
 	const char		*s2;
 
-	int			i1;
-	int			i2;
+	long			i1;
+	long			i2;
 }
 tg_transformer;
 
@@ -201,7 +201,7 @@ extern int tg_printd_debug_level;
 
 void tg_printd(int level, const char* fmt, ...);
 void tg_time_diff(struct timespec *end, struct timespec *start, struct timespec *result);
-void tg_split(char *source, size_t source_len, const char **seps, int sep_length, tg_list *tokens);
+void tg_split(char *source, size_t source_len, const char **seps, long sep_length, tg_list *tokens);
 
 
 tg_jsonfile *tg_jsonfile_get(const char *file);
@@ -229,7 +229,7 @@ tg_pattern *tg_pattern_alloc();
 tg_pattern *tg_pattern_get(tg_domain *domain);
 tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens);
 size_t tg_pattern_matched_length(tg_pattern *pattern, tg_list *matched_tokens);
-int tg_pattern_rank(tg_pattern *pattern);
+long tg_pattern_rank(tg_pattern *pattern);
 void tg_pattern_free(tg_pattern *pattern);
 
 

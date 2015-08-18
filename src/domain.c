@@ -94,7 +94,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 	jsmntok_t *token, *tokens, *norm, *patch;
 	const char *field;
 	long count, count2;
-	int i;
+	long i;
 
 	assert(pattern);
 
@@ -189,7 +189,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	if(field)
 	{
-		i = atoi(field);
+		i = atol(field);
 
 		if(i < 1)
 		{
@@ -321,7 +321,7 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 	tg_list *list;
 	tg_list_item *item;
 	long count = 0;
-	int i;
+	long i;
 
 	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
 	

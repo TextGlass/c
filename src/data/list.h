@@ -61,8 +61,6 @@ void *tg_list_get_from(tg_list_item *item, size_t index);
 long tg_list_index_str(tg_list *list, const char *value);
 void tg_list_free(tg_list *list);
 int tg_list_item_valid(tg_list_item *item);
-int tg_list_rlock(tg_list *list);
-int tg_list_unlock(tg_list *list);
 
 
 #endif  /* _TG_LIST_H_INCLUDED_ */

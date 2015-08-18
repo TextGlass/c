@@ -5,7 +5,7 @@ static tg_attribute *tg_attribute_alloc();
 void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file)
 {
 	jsmntok_t *tokens, *token;
-	int i;
+	long i;
 
 	if(!json_file)
 	{
@@ -43,7 +43,7 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 	tg_list_item *item;
 	const char *default_value, *current;
 	size_t pos;
-	int i;
+	long i;
 
 	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
 	assert(domain->attribute_index && domain->attribute_index->magic == TG_HASHTABLE_MAGIC);

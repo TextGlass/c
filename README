@@ -2,5 +2,3 @@ TextGlass C Client
 
 TODO:
 -comments
--remove ints, favor longs or something
--strtoll

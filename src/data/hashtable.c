@@ -69,7 +69,7 @@ static int tg_hashtable_cmp(const tg_hashtable_key *k1, const tg_hashtable_key *
 static tg_hashtable_key *tg_hashtable_key_alloc(tg_hashtable_bucket *bucket)
 {
 	tg_hashtable_key *key;
-	int i;
+	size_t i;
 
 	assert(bucket && bucket->magic == TG_HASHTABLE_BUCKET_MAGIC);
 

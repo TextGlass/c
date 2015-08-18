@@ -18,7 +18,7 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 	size_t length, token_length;
 	size_t i, j, k, ngram_pos;
 	size_t winner_length;
-	int rank, wrank;
+	long rank, wrank;
 
 	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
 	assert(original);

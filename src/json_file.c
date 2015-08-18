@@ -7,7 +7,7 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 	size_t bytes;
 	jsmn_parser parser;
 	jsmntok_t *token, *parent;
-	int i;
+	long i;
 
 	assert(file);
 
@@ -29,7 +29,8 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 	jsonfile->json_len = ftell(f);
 	fseek(f, 0L, SEEK_SET);
 
-	if(!jsonfile->json_len || jsonfile->json_len > 1800 * 1024 * 1024)
+	if(!jsonfile->json_len || (sizeof(long) == 4 &&
+		jsonfile->json_len > 1800 * 1024 * 1024))
 	{
 		fprintf(stderr, "Invalid JSON file\n");
 		goto jerror;
@@ -166,7 +167,7 @@ void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile)
 
 jsmntok_t *tg_json_get(jsmntok_t *tokens, const char *field)
 {
-	int i;
+	long i;
 
 	assert(field);
 

@@ -35,7 +35,7 @@ void tg_time_diff(struct timespec *end, struct timespec *start, struct timespec 
 	}
 }
 
-void tg_split(char *source, size_t source_len, const char **seps, int sep_length, tg_list *tokens)
+void tg_split(char *source, size_t source_len, const char **seps, long sep_length, tg_list *tokens)
 {
 	size_t source_pos = 0;
 	size_t dest_start = 0;

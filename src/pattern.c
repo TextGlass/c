@@ -6,7 +6,7 @@ tg_pattern *tg_pattern_create(tg_pattern *pattern, jsmntok_t *tokens)
 {
 	const char *value;
 	jsmntok_t *token;
-	int i;
+	long i;
 
 	assert(pattern && pattern->magic == TG_PATTERN_MAGIC);
 
@@ -174,9 +174,9 @@ size_t tg_pattern_matched_length(tg_pattern *pattern, tg_list *matched_tokens)
 	return length;
 }
 
-int tg_pattern_rank(tg_pattern *pattern)
+long tg_pattern_rank(tg_pattern *pattern)
 {
-	int rank;
+	long rank;
 
 	if(!pattern)
 	{

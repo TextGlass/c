@@ -26,7 +26,7 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens)
 	jsmntok_t *token;
 
 	const char *type;
-	int i;
+	long i;
 
 	transformers = tg_list_alloc(0, (TG_FREE)&tg_transformer_free);
 
@@ -264,8 +264,8 @@ char *tg_t_replaceall(tg_list *free_list, tg_transformer *transformer, char *inp
 	size_t dest_len, dest_pos, dest_new_len;
 	size_t input_len, input_pos;
 	size_t find_len, replace_with_len;
-	int replace_count;
-	int first;
+	long replace_count;
+	long first;
 
 	assert(free_list && free_list->magic == TG_LIST_MAGIC);
 	assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
@@ -377,7 +377,7 @@ static tg_transformer *tg_t_splitget_alloc(jsmntok_t *token)
 		return NULL;
 	}
 
-	splitget->i1 = atoi(get);
+	splitget->i1 = atol(get);
 
 	if(splitget->i1 < -1)
 	{
@@ -398,7 +398,7 @@ char *tg_t_splitget(tg_list *free_list, tg_transformer *transformer, char *input
 	tg_list_item *item;
 	const char **seps;
 	char *ret = NULL;
-	int get;
+	long get;
 
 	assert(free_list && free_list->magic == TG_LIST_MAGIC);
 	assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
@@ -501,11 +501,11 @@ static tg_transformer *tg_t_substring_alloc(jsmntok_t *token)
 		return NULL;
 	}
 
-	substring->i1 = atoi(substring->s1);
+	substring->i1 = atol(substring->s1);
 
 	if(substring->s2)
 	{
-		substring->i2 = atoi(substring->s2);
+		substring->i2 = atol(substring->s2);
 	}
 
 	if(substring->i1 < 0 || substring->i2 < -1)

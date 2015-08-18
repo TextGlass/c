@@ -223,7 +223,7 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 	const char *expected;
 	const char *input;
 	int errors = 0;
-	int i;
+	long i;
 
 	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
 	assert(test_file && test_file->magic == TG_JSONFILE_MAGIC);
@@ -305,7 +305,7 @@ static int tg_test_attributes(tg_result *result, jsmntok_t *attributes)
 {
 	const char *key, *value;
 	size_t j;
-	int i;
+	long i;
 
 	assert(result && result->magic == TG_RESULT_MAGIC);
 
