@@ -5,3 +5,4 @@ TODO:
 -rename jsonfile.c
 -free empty transformers?
 -add 1 to tokens.skip
+-put default values in values
