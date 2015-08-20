@@ -4,3 +4,4 @@ TODO:
 -comments
 -rename jsonfile.c
 -free empty transformers?
+-add 1 to tokens.skip
