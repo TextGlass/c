@@ -84,6 +84,8 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 		token->str = jsonfile->json + token->start;
 		jsonfile->json[token->end] = '\0';
 
+		token->skip = 1;
+
 		parent = token;
 
 		while(parent->parent >= 0)
@@ -176,7 +178,7 @@ jsmntok_t *tg_json_get(jsmntok_t *tokens, const char *field)
 		return NULL;
 	}
 
-	for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1)
+	for(i = 1; i < tokens[0].skip; i += tokens[i].skip)
 	{
 		if(TG_JSON_IS_STRING(&tokens[i]) && !strcmp(tokens[i].str, field) &&
 			tokens[i].size == 1)

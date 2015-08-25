@@ -240,7 +240,7 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 
 	if(TG_JSON_IS_ARRAY(tests))
 	{
-		for(i = 1; i < tests[0].skip; i += tests[i].skip + 1)
+		for(i = 1; i < tests[0].skip; i += tests[i].skip)
 		{
 			test = &tests[i];
 
@@ -311,7 +311,7 @@ static int tg_test_attributes(tg_result *result, jsmntok_t *attributes)
 
 	if(TG_JSON_IS_OBJECT(attributes))
 	{
-		for(i = 1; i < attributes[0].skip; i += attributes[i].skip + 1)
+		for(i = 1; i < attributes[0].skip; i += attributes[i].skip)
 		{
 			key = attributes[i].str;
 			value = attributes[i + 1].str;

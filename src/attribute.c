@@ -22,7 +22,7 @@ void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file)
 	{
 		tg_printd(2, "Found %d attribute(s) in file\n", tokens->size);
 
-		for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1)
+		for(i = 1; i < tokens[0].skip; i += tokens[i].skip)
 		{
 			token = &tokens[i];
 
@@ -66,7 +66,7 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 
 		tokens = tg_json_get(ptokens, "attributes");
 
-		for(i = 1; TG_JSON_IS_OBJECT(tokens) && i < tokens[0].skip; i += tokens[i].skip + 1)
+		for(i = 1; TG_JSON_IS_OBJECT(tokens) && i < tokens[0].skip; i += tokens[i].skip)
 		{
 			key = &tokens[i];
 
@@ -91,7 +91,7 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 
 		tokens = tg_json_get(ptokens, "attributeTransformers");
 
-		for(i = 1; TG_JSON_IS_OBJECT(tokens) && i < tokens[0].skip; i += tokens[i].skip + 1)
+		for(i = 1; TG_JSON_IS_OBJECT(tokens) && i < tokens[0].skip; i += tokens[i].skip)
 		{
 			key = &tokens[i];
 

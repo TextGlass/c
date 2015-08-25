@@ -327,7 +327,7 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 	
 	if(TG_JSON_IS_ARRAY(tokens))
 	{
-		for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1)
+		for(i = 1; i < tokens[0].skip; i += tokens[i].skip)
 		{
 			token = &tokens[i];
 

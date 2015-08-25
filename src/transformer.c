@@ -32,7 +32,7 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens)
 
 	if(TG_JSON_IS_ARRAY(tokens))
 	{
-		for(i = 1; i < tokens[0].skip; i += tokens[i].skip + 1)
+		for(i = 1; i < tokens[0].skip; i += tokens[i].skip)
 		{
 			token = &tokens[i];
 
