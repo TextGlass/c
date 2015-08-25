@@ -4,5 +4,4 @@ TODO:
 -comments
 -free empty transformers?
 -put default values in value
--merge replaceall and replacewith
 -if no attribute transformers, create static response

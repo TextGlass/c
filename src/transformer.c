@@ -6,9 +6,8 @@ char *tg_t_lowercase(tg_list *free_list, tg_transformer *transformer, char *inpu
 static tg_transformer *tg_t_uppercase_alloc(jsmntok_t *token);
 char *tg_t_uppercase(tg_list *free_list, tg_transformer *transformer, char *input);
 
-static tg_transformer *tg_t_replaceall_alloc(jsmntok_t *token);
-static tg_transformer *tg_t_replacefirst_alloc(jsmntok_t *token);
-char *tg_t_replaceall(tg_list *free_list, tg_transformer *transformer, char *input);
+static tg_transformer *tg_t_replace_alloc(jsmntok_t *token, int first);
+char *tg_t_replace(tg_list *free_list, tg_transformer *transformer, char *input);
 
 static tg_transformer *tg_t_splitget_alloc(jsmntok_t *token);
 char *tg_t_splitget(tg_list *free_list, tg_transformer *transformer, char *input);
@@ -54,11 +53,11 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens)
 			}
 			else if(!strcmp(type, "ReplaceAll"))
 			{
-				transformer = tg_t_replaceall_alloc(token);
+				transformer = tg_t_replace_alloc(token, 0);
 			}
 			else if(!strcmp(type, "ReplaceFirst"))
 			{
-				transformer = tg_t_replacefirst_alloc(token);
+				transformer = tg_t_replace_alloc(token, 1);
 			}
 			else if(!strcmp(type, "SplitAndGet"))
 			{
@@ -185,79 +184,43 @@ char *tg_t_uppercase(tg_list *free_list, tg_transformer *transformer, char *inpu
 	return input;
 }
 
-static tg_transformer *tg_t_replaceall_alloc(jsmntok_t *token)
+static tg_transformer *tg_t_replace_alloc(jsmntok_t *token, int first)
 {
-	tg_transformer *replaceall;
+	tg_transformer *replace;
 	jsmntok_t *parameters;
 	const char *type;
 
 	type = tg_json_get_str(token, "type");
 
-	assert(type && !strcmp(type, "ReplaceAll"));
+	assert(type && (!strcmp(type, "ReplaceAll") || !strcmp(type, "ReplaceFirst")));
 
-	replaceall = tg_transformer_alloc();
+	replace = tg_transformer_alloc();
 
-	replaceall->transformer = &tg_t_replaceall;
-	replaceall->i1 = 0;
-
-	parameters = tg_json_get(token, "parameters");
-
-	if(TG_JSON_IS_OBJECT(parameters))
-	{
-		replaceall->s1 = tg_json_get_str(parameters, "find");
-		replaceall->s2 = tg_json_get_str(parameters, "replaceWith");
-	}
-
-	if(!replaceall->s1 || !replaceall->s2 || !replaceall->s1[0])
-	{
-		fprintf(stderr, "Invalid ReplaceAll transformer\n");
-		tg_transformer_free(replaceall);
-		return NULL;
-	}
-
-	tg_printd(5, "Found transformer: %s, find: '%s', replaceWith: '%s'\n",
-		type, replaceall->s1, replaceall->s2);
-
-	return replaceall;
-}
-
-static tg_transformer *tg_t_replacefirst_alloc(jsmntok_t *token)
-{
-	tg_transformer *replacefirst;
-	jsmntok_t *parameters;
-	const char *type;
-
-	type = tg_json_get_str(token, "type");
-
-	assert(type && !strcmp(type, "ReplaceFirst"));
-
-	replacefirst = tg_transformer_alloc();
-
-	replacefirst->transformer = &tg_t_replaceall;
-	replacefirst->i1 = 1;
+	replace->transformer = &tg_t_replace;
+	replace->i1 = first;
 
 	parameters = tg_json_get(token, "parameters");
 
 	if(TG_JSON_IS_OBJECT(parameters))
 	{
-		replacefirst->s1 = tg_json_get_str(parameters, "find");
-		replacefirst->s2 = tg_json_get_str(parameters, "replaceWith");
+		replace->s1 = tg_json_get_str(parameters, "find");
+		replace->s2 = tg_json_get_str(parameters, "replaceWith");
 	}
 
-	if(!replacefirst->s1 || !replacefirst->s2 || !replacefirst->s1[0])
+	if(!replace->s1 || !replace->s2 || !replace->s1[0])
 	{
-		fprintf(stderr, "Invalid ReplaceFirst transformer\n");
-		tg_transformer_free(replacefirst);
+		fprintf(stderr, "Invalid Replace transformer\n");
+		tg_transformer_free(replace);
 		return NULL;
 	}
 
 	tg_printd(5, "Found transformer: %s, find: '%s', replaceWith: '%s'\n",
-		type, replacefirst->s1, replacefirst->s2);
+		type, replace->s1, replace->s2);
 
-	return replacefirst;
+	return replace;
 }
 
-char *tg_t_replaceall(tg_list *free_list, tg_transformer *transformer, char *input)
+char *tg_t_replace(tg_list *free_list, tg_transformer *transformer, char *input)
 {
 	const char *find, *replace_with;
 	char *dest, *dest_new;
