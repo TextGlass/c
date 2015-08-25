@@ -18,7 +18,7 @@ SOURCE= \
 	classify.c \
 	attribute.c \
 	transformer.c \
-	json_file.c \
+	jsonfile.c \
 	util.c \
 	data/hashtable.c \
 	data/list.c \
