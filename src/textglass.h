@@ -73,8 +73,6 @@ typedef struct
 
 	tg_list			*transformers;
 
-	const char		**default_values;
-
 	const char		*buf[0];
 }
 tg_attribute;
@@ -188,6 +186,8 @@ typedef struct
 	const char		**values;
 
 	size_t			key_len;
+
+	int			malloc:1;
 
 	const char		*buf[0];
 }

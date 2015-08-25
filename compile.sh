@@ -4,12 +4,12 @@ set -e
 
 cd src
 
-echo "Cleaning"
-
-make clean
-
 if [ "$1" = "clean" ]
 then
+    echo "Cleaning"
+
+    make clean
+
     exit 0
 fi
 

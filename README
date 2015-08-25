@@ -2,6 +2,4 @@ TextGlass C Client
 
 TODO:
 -comments
--free empty transformers?
--put default values in value
 -if no attribute transformers, create static response

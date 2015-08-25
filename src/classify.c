@@ -232,12 +232,13 @@ static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
 	tg_list *attribute_transformer;
 	tg_list_item *item, *item2;
 	char *transformed;
-	size_t key_len = 0, pos, default_value_pos;
+	size_t key_len = 0, pos;
 
 	if(attributes)
 	{
 		assert(attributes->magic == TG_ATTRIBUTE_MAGIC);
-		assert(attributes->key_len == attributes->value_len + attributes->transformers->size);
+		assert(attributes->key_len == attributes->value_len +
+			(attributes->transformers ? attributes->transformers->size : 0));
 		key_len = attributes->key_len;
 	}
 
@@ -251,6 +252,7 @@ static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
 	result->key_len = key_len;
 	result->keys = result->buf;
 	result->values = &result->buf[result->key_len];
+	result->malloc = 1;
 
 	if(attributes)
 	{
@@ -270,7 +272,6 @@ static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
 		}
 
 		pos = attributes->value_len;
-		default_value_pos = 0;
 
 		TG_LIST_FOREACH(attributes->transformers, item)
 		{
@@ -295,7 +296,7 @@ static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
 				if(!transformed)
 				{
 					tg_printd(4, "Transformer error\n");
-					transformed = (char*)attributes->default_values[default_value_pos];
+					transformed = (char*)attributes->values[pos];
 					break;
 				}
 
@@ -303,8 +304,6 @@ static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
 			}
 
 			result->values[pos++] = transformed;
-
-			default_value_pos++;
 		}
 	}
 
@@ -316,6 +315,12 @@ void tg_result_free(tg_result *result)
 	assert(result && result->magic == TG_RESULT_MAGIC);
 
 	result->magic = 0;
+
+	if(!result->malloc)
+	{
+		assert(!result->free_list);
+		return;
+	}
 
 	if(result->free_list)
 	{
