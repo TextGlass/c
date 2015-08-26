@@ -1,7 +1,5 @@
 #include "textglass.h"
 
-static tg_attributes *tg_attributes_alloc();
-
 void tg_attributes_json_index(tg_domain *domain, tg_jsonfile *json_file)
 {
 	jsmntok_t *tokens, *token;
@@ -222,7 +220,7 @@ aerror:
 	return NULL;
 }
 
-static tg_attributes *tg_attributes_alloc(size_t keys)
+tg_attributes *tg_attributes_alloc(size_t keys)
 {
 	tg_attributes *attributes;
 
@@ -230,7 +228,7 @@ static tg_attributes *tg_attributes_alloc(size_t keys)
 
 	assert(attributes);
 
-	attributes->magic = TG_ATTRIBUTE_MAGIC;
+	attributes->magic = TG_ATTRIBUTES_MAGIC;
 	attributes->user_malloc = 0;
 	attributes->key_len = keys;
 	attributes->keys = attributes->buf;
@@ -243,7 +241,7 @@ static tg_attributes *tg_attributes_alloc(size_t keys)
 
 void tg_attributes_free(tg_attributes *attributes)
 {
-	assert(attributes && attributes->magic == TG_ATTRIBUTE_MAGIC);
+	assert(attributes && attributes->magic == TG_ATTRIBUTES_MAGIC);
 
 	if(!attributes->user_malloc)
 	{
@@ -255,9 +253,14 @@ void tg_attributes_free(tg_attributes *attributes)
 
 void tg_attributes_pattern_free(tg_attributes *attributes)
 {
-	assert(attributes && attributes->magic == TG_ATTRIBUTE_MAGIC);
+	assert(attributes && attributes->magic == TG_ATTRIBUTES_MAGIC);
 
 	attributes->magic = 0;
+
+	if(attributes->free_list)
+	{
+		tg_list_free(attributes->free_list);
+	}
 
 	if(attributes->transformers)
 	{

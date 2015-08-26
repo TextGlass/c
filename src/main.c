@@ -4,7 +4,7 @@
 
 static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file);
 static void tg_printHelp();
-static int tg_test_attributes(tg_result *result, jsmntok_t *attributes);
+static int tg_test_attributes(tg_attributes *result, jsmntok_t *attributes);
 
 #define TG_MAIN_ERROR(msg) do {fprintf(stderr, "%s", msg); exit = 1; goto mdone; } while(0)
 
@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	char *attribute_patch = NULL;
 	char *test_string = NULL;
 	char *option, buf[128];
-	tg_result *result;
+	tg_attributes *result;
 	tg_jsonfile *test_file;
 	tg_domain *domain = NULL;
 	struct timespec start, end, diff;
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 			tg_printd(1, "Test attribute: '%s'='%s'\n", result->keys[j], result->values[j]);
 		}
 
-		tg_result_free(result);
+		tg_attributes_free(result);
 
 		tg_printd(0, "Test time: %lds %ldms %ld.%ldus\n",
 			diff.tv_sec, diff.tv_nsec / 1000000, diff.tv_nsec / 1000 % 1000, diff.tv_nsec % 1000);
@@ -219,7 +219,7 @@ static void tg_printHelp()
 static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 {
 	jsmntok_t *tests, *test, *attributes;
-	tg_result *result;
+	tg_attributes *result;
 	const char *expected;
 	const char *input;
 	int errors = 0;
@@ -264,20 +264,20 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 				if(result->error_code)
 				{
 					tg_printd(2, "FAILED: error_code=%d\n", result->error_code);
-					tg_result_free(result);
+					tg_attributes_free(result);
 					errors++;
 					continue;
 				}
 				else if(!result->pattern_id && !expected)
 				{
 					tg_printd(2, "PASS: null\n");
-					tg_result_free(result);
+					tg_attributes_free(result);
 					continue;
 				}
 				else if(!result->pattern_id || !expected || strcmp(result->pattern_id, expected))
 				{
 					tg_printd(2, "FAILED: expected patternId: %s, got: %s\n", expected, result->pattern_id);
-					tg_result_free(result);
+					tg_attributes_free(result);
 					errors++;
 					continue;
 				}
@@ -286,14 +286,14 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 
 				if(tg_test_attributes(result, attributes))
 				{
-					tg_result_free(result);
+					tg_attributes_free(result);
 					errors++;
 					continue;
 				}
 
 				tg_printd(2, "PASS: %s\n", result->pattern_id);
 
-				tg_result_free(result);
+				tg_attributes_free(result);
 			}
 		}
 	}
@@ -301,13 +301,13 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 	return errors;
 }
 
-static int tg_test_attributes(tg_result *result, jsmntok_t *attributes)
+static int tg_test_attributes(tg_attributes *result, jsmntok_t *attributes)
 {
 	const char *key, *value;
 	size_t j;
 	long i;
 
-	assert(result && result->magic == TG_RESULT_MAGIC);
+	assert(result && result->magic == TG_ATTRIBUTES_MAGIC);
 
 	if(TG_JSON_IS_OBJECT(attributes))
 	{

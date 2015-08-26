@@ -59,7 +59,7 @@ tg_pattern_type;
 typedef struct
 {
 	unsigned int		magic;
-#define TG_ATTRIBUTE_MAGIC	0xF45A0AC2
+#define TG_ATTRIBUTES_MAGIC	0xF45A0AC2
 
 	unsigned int		error_code;
 
@@ -174,29 +174,6 @@ typedef struct tg_transformer
 tg_transformer;
 
 
-typedef struct
-{
-	unsigned int		magic;
-#define TG_RESULT_MAGIC		0xAB9D213A
-
-	unsigned int		error_code;
-
-	const char		*pattern_id;
-
-	tg_list			*free_list;
-
-	const char		**keys;
-	const char		**values;
-
-	size_t			key_len;
-
-	int			malloc:1;
-
-	const char		*buf[0];
-}
-tg_result;
-
-
 #define TG_FREE				void(*)(void*)
 
 
@@ -224,8 +201,7 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 void tg_domain_free(tg_domain *domain);
 
 
-tg_result *tg_classify(const tg_domain *domain, const char *original);
-void tg_result_free(tg_result *result);
+tg_attributes *tg_classify(const tg_domain *domain, const char *original);
 
 
 tg_pattern *tg_pattern_alloc();
@@ -242,6 +218,7 @@ void tg_transformer_free(tg_transformer *transformer);
 
 void tg_attributes_json_index(tg_domain *domain, tg_jsonfile *json_file);
 tg_attributes *tg_attributes_build(tg_domain *domain, const char *pattern_id);
+tg_attributes *tg_attributes_alloc(size_t keys);
 void tg_attributes_free(tg_attributes *attributes);
 void tg_attributes_pattern_free(tg_attributes *attributes);
 
