@@ -264,7 +264,7 @@ void tg_pattern_free(tg_pattern *pattern)
 
 	if(pattern->attribute)
 	{
-		tg_attribute_free(pattern->attribute);
+		tg_attributes_pattern_free(pattern->attribute);
 	}
 
 	pattern->magic = 0;

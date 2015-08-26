@@ -1,8 +1,8 @@
 #include "textglass.h"
 
-static tg_attribute *tg_attribute_alloc();
+static tg_attributes *tg_attributes_alloc();
 
-void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file)
+void tg_attributes_json_index(tg_domain *domain, tg_jsonfile *json_file)
 {
 	jsmntok_t *tokens, *token;
 	long i;
@@ -33,9 +33,9 @@ void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file)
 	}
 }
 
-tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
+tg_attributes *tg_attributes_build(tg_domain *domain, const char *pattern_id)
 {
-	tg_attribute *attribute = NULL;
+	tg_attributes *attributes = NULL;
 	jsmntok_t *ptokens, *tokens, *key, *value;
 	tg_list *keys, *values;
 	tg_list *transformer_keys, *transformers, *attribute_transformer;
@@ -160,46 +160,43 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 	assert(transformer_keys->size == transformers->size);
 	assert(transformers->size == default_values->size);
 
-	attribute = tg_attribute_alloc(keys->size + transformer_keys->size, values->size);
+	attributes = tg_attributes_alloc(keys->size + transformer_keys->size);
 
-	attribute->pattern_id = pattern_id;
-	attribute->transformers = transformers;
+	attributes->pattern_id = pattern_id;
+	attributes->transformers = transformers;
 
 	pos = 0;
 
 	TG_LIST_FOREACH(keys, item)
 	{
-		attribute->keys[pos++] = (char*)item->value;
+		attributes->keys[pos++] = (char*)item->value;
 	}
 
 	TG_LIST_FOREACH(transformer_keys, item)
 	{
-		attribute->keys[pos++] = (char*)item->value;
+		attributes->keys[pos++] = (char*)item->value;
 	}
 
-	assert(pos == attribute->key_len);
+	assert(pos == attributes->key_len);
 
 	pos = 0;
 
 	TG_LIST_FOREACH(values, item)
 	{
-		attribute->values[pos++] = (char*)item->value;
+		attributes->values[pos++] = (char*)item->value;
 	}
-
-	assert(pos == attribute->value_len);
 
 	TG_LIST_FOREACH(default_values, item)
 	{
-		attribute->values[pos++] = (char*)item->value;
+		attributes->values[pos++] = (char*)item->value;
 	}
 
-	assert(pos == attribute->key_len);
-	assert(attribute->key_len == attribute->value_len + attribute->transformers->size);
+	assert(pos == attributes->key_len);
 
-	if(!attribute->transformers->size)
+	if(!attributes->transformers->size)
 	{
-		tg_list_free(attribute->transformers);
-		attribute->transformers = NULL;
+		tg_list_free(attributes->transformers);
+		attributes->transformers = NULL;
 	}
 
 	tg_list_free(keys);
@@ -207,7 +204,7 @@ tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id)
 	tg_list_free(transformer_keys);
 	tg_list_free(default_values);
 
-	return attribute;
+	return attributes;
 
 aerror:
 	tg_list_free(keys);
@@ -216,49 +213,56 @@ aerror:
 	tg_list_free(transformers);
 	tg_list_free(default_values);
 
-	if(attribute)
+	if(attributes)
 	{
-		attribute->transformers = NULL;
-		tg_attribute_free(attribute);
+		attributes->transformers = NULL;
+		tg_attributes_pattern_free(attributes);
 	}
 
 	return NULL;
 }
 
-static tg_attribute *tg_attribute_alloc(size_t keys, size_t values)
+static tg_attributes *tg_attributes_alloc(size_t keys)
 {
-	tg_attribute *attribute;
+	tg_attributes *attributes;
 
-	assert(keys >= values);
+	attributes = calloc(1, sizeof(tg_attributes) + (sizeof(char*) * keys * 2));
 
-	attribute = calloc(1, sizeof(tg_attribute) + (sizeof(char*) * keys * 2));
+	assert(attributes);
 
-	assert(attribute);
+	attributes->magic = TG_ATTRIBUTE_MAGIC;
+	attributes->user_malloc = 0;
+	attributes->key_len = keys;
+	attributes->keys = attributes->buf;
+	attributes->values = &attributes->buf[attributes->key_len];
+	attributes->transformers = NULL;
+	attributes->free_list = NULL;
 
-	attribute->magic = TG_ATTRIBUTE_MAGIC;
-	attribute->malloc = 1;
-	attribute->key_len = keys;
-	attribute->value_len = values;
-	attribute->keys = attribute->buf;
-	attribute->values = &attribute->buf[attribute->key_len];
-	attribute->transformers = NULL;
-
-	return attribute;
+	return attributes;
 }
 
-void tg_attribute_free(tg_attribute *attribute)
+void tg_attributes_free(tg_attributes *attributes)
 {
-	assert(attribute && attribute->magic == TG_ATTRIBUTE_MAGIC);
+	assert(attributes && attributes->magic == TG_ATTRIBUTE_MAGIC);
 
-	attribute->magic = 0;
-
-	if(attribute->transformers)
+	if(!attributes->user_malloc)
 	{
-		tg_list_free(attribute->transformers);
+		return;
 	}
 
-	if(attribute->malloc)
+	tg_attributes_pattern_free(attributes);
+}
+
+void tg_attributes_pattern_free(tg_attributes *attributes)
+{
+	assert(attributes && attributes->magic == TG_ATTRIBUTE_MAGIC);
+
+	attributes->magic = 0;
+
+	if(attributes->transformers)
 	{
-		free(attribute);
+		tg_list_free(attributes->transformers);
 	}
+
+	free(attributes);
 }

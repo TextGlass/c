@@ -61,21 +61,24 @@ typedef struct
 	unsigned int		magic;
 #define TG_ATTRIBUTE_MAGIC	0xF45A0AC2
 
+	unsigned int		error_code;
+
 	const char		*pattern_id;
 
-	int			malloc:1;
+	int			user_malloc:1;
 
 	const char		**keys;
 	const char		**values;
 
 	size_t			key_len;
-	size_t			value_len;
 
 	tg_list			*transformers;
 
+	tg_list			*free_list;
+
 	const char		*buf[0];
 }
-tg_attribute;
+tg_attributes;
 
 
 typedef struct
@@ -97,7 +100,7 @@ typedef struct
 
 	unsigned long		ref_count;
 
-	tg_attribute		*attribute;
+	tg_attributes		*attribute;
 }
 tg_pattern;
 
@@ -123,7 +126,7 @@ typedef struct
 	unsigned long		ngram_size;
 
 	const char		*default_id;
-	tg_attribute		*default_attributes;
+	tg_attributes		*default_attributes;
 
 	tg_list			*list_slab;
 	size_t			list_slab_size;
@@ -237,9 +240,10 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens);
 void tg_transformer_free(tg_transformer *transformer);
 
 
-void tg_attribute_json_index(tg_domain *domain, tg_jsonfile *json_file);
-tg_attribute *tg_attribute_build(tg_domain *domain, const char *pattern_id);
-void tg_attribute_free(tg_attribute *attribute);
+void tg_attributes_json_index(tg_domain *domain, tg_jsonfile *json_file);
+tg_attributes *tg_attributes_build(tg_domain *domain, const char *pattern_id);
+void tg_attributes_free(tg_attributes *attributes);
+void tg_attributes_pattern_free(tg_attributes *attributes);
 
 
 #endif	/* _TEXTGLASS_H_INCLUDED_ */

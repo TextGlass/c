@@ -233,16 +233,16 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	domain->attribute_index = tg_hashtable_alloc(100, NULL);
 
-	tg_attribute_json_index(domain, domain->pattern);
-	tg_attribute_json_index(domain, domain->pattern_patch);
-	tg_attribute_json_index(domain, domain->attribute);
-	tg_attribute_json_index(domain, domain->attribute_patch);
+	tg_attributes_json_index(domain, domain->pattern);
+	tg_attributes_json_index(domain, domain->pattern_patch);
+	tg_attributes_json_index(domain, domain->attribute);
+	tg_attributes_json_index(domain, domain->attribute_patch);
 
 	tg_printd(1, "Found %zu attribute(s)\n", tg_hashtable_size(domain->attribute_index));
 
 	if(domain->default_id)
 	{
-		domain->default_attributes = tg_attribute_build(domain, domain->default_id);
+		domain->default_attributes = tg_attributes_build(domain, domain->default_id);
 
 		if(!domain->default_attributes)
 		{
@@ -340,7 +340,7 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 				return -1;
 			}
 
-			pattern->attribute = tg_attribute_build(domain, pattern->pattern_id);
+			pattern->attribute = tg_attributes_build(domain, pattern->pattern_id);
 
 			if(!pattern->attribute)
 			{
@@ -409,7 +409,7 @@ void tg_domain_free(tg_domain *domain)
 
 	if(domain->default_attributes)
 	{
-		tg_attribute_free(domain->default_attributes);
+		tg_attributes_pattern_free(domain->default_attributes);
 	}
 
 	if(domain->input_transformers)

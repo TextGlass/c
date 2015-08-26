@@ -3,7 +3,7 @@
 static void tg_classify_match(tg_classified *classify, const char *token);
 static void tg_classify_free(tg_classified *classify);
 
-static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input);
+static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input);
 static tg_classified *tg_classified_alloc(const tg_domain *domain);
 
 tg_result *tg_classify(const tg_domain *domain, const char *original)
@@ -225,21 +225,21 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 	return;
 }
 
-static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
+static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input)
 {
 	tg_result *result;
 	tg_transformer *transformer;
 	tg_list *attribute_transformer;
 	tg_list_item *item, *item2;
 	char *transformed;
-	size_t key_len = 0, pos;
+	size_t key_len = 0, value_len = 0, pos;
 
 	if(attributes)
 	{
 		assert(attributes->magic == TG_ATTRIBUTE_MAGIC);
-		assert(attributes->key_len == attributes->value_len +
-			(attributes->transformers ? attributes->transformers->size : 0));
+		assert(attributes->key_len >= (attributes->transformers ? attributes->transformers->size : 0));
 		key_len = attributes->key_len;
+		value_len = key_len - (attributes->transformers ? attributes->transformers->size : 0);
 	}
 
 	assert(input);
@@ -259,7 +259,7 @@ static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
 		result->pattern_id = attributes->pattern_id;
 
 		memcpy(result->keys, attributes->keys, attributes->key_len * sizeof(char*));
-		memcpy(result->values, attributes->values, attributes->value_len * sizeof(char*));
+		memcpy(result->values, attributes->values, value_len * sizeof(char*));
 	}
 
 	if(attributes && attributes->transformers)
@@ -271,7 +271,7 @@ static tg_result *tg_result_alloc(tg_attribute *attributes, const char *input)
 			result->free_list = tg_list_alloc(attributes->transformers->size * 3, (TG_FREE)free);
 		}
 
-		pos = attributes->value_len;
+		pos = value_len;
 
 		TG_LIST_FOREACH(attributes->transformers, item)
 		{
