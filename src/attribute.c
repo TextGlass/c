@@ -214,7 +214,7 @@ aerror:
 	if(attributes)
 	{
 		attributes->transformers = NULL;
-		tg_attributes_pattern_free(attributes);
+		tg_attributes_free(attributes);
 	}
 
 	return NULL;
@@ -229,29 +229,14 @@ tg_attributes *tg_attributes_alloc(size_t keys)
 	assert(attributes);
 
 	attributes->magic = TG_ATTRIBUTES_MAGIC;
-	attributes->user_malloc = 0;
 	attributes->key_len = keys;
 	attributes->keys = attributes->buf;
 	attributes->values = &attributes->buf[attributes->key_len];
-	attributes->transformers = NULL;
-	attributes->free_list = NULL;
 
 	return attributes;
 }
 
 void tg_attributes_free(tg_attributes *attributes)
-{
-	assert(attributes && attributes->magic == TG_ATTRIBUTES_MAGIC);
-
-	if(!attributes->user_malloc)
-	{
-		return;
-	}
-
-	tg_attributes_pattern_free(attributes);
-}
-
-void tg_attributes_pattern_free(tg_attributes *attributes)
 {
 	assert(attributes && attributes->magic == TG_ATTRIBUTES_MAGIC);
 

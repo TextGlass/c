@@ -80,6 +80,8 @@ typedef struct
 }
 tg_attributes;
 
+typedef tg_attributes		tg_result;
+#define TG_RESULT_MAGIC		TG_ATTRIBUTES_MAGIC
 
 typedef struct
 {
@@ -127,6 +129,8 @@ typedef struct
 
 	const char		*default_id;
 	tg_attributes		*default_attributes;
+
+	tg_attributes		*error_attributes;
 
 	tg_list			*list_slab;
 	size_t			list_slab_size;
@@ -201,7 +205,8 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 void tg_domain_free(tg_domain *domain);
 
 
-tg_attributes *tg_classify(const tg_domain *domain, const char *original);
+tg_result *tg_classify(const tg_domain *domain, const char *original);
+void tg_result_free(tg_result *result);
 
 
 tg_pattern *tg_pattern_alloc();
@@ -220,7 +225,6 @@ void tg_attributes_json_index(tg_domain *domain, tg_jsonfile *json_file);
 tg_attributes *tg_attributes_build(tg_domain *domain, const char *pattern_id);
 tg_attributes *tg_attributes_alloc(size_t keys);
 void tg_attributes_free(tg_attributes *attributes);
-void tg_attributes_pattern_free(tg_attributes *attributes);
 
 
 #endif	/* _TEXTGLASS_H_INCLUDED_ */

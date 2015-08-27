@@ -6,12 +6,12 @@ static void tg_classify_free(tg_classified *classify);
 static tg_attributes *tg_result_alloc(tg_attributes *attributes, const char *input);
 static tg_classified *tg_classified_alloc(const tg_domain *domain);
 
-tg_attributes *tg_classify(const tg_domain *domain, const char *original)
+tg_result *tg_classify(const tg_domain *domain, const char *original)
 {
 	tg_transformer *transformer;
 	tg_classified *classify;
 	tg_pattern *winner, *candidate;
-	tg_attributes *result;
+	tg_result *result;
 	tg_list *tokens = NULL;
 	tg_list_item *item;
 	char *input, *ngram, *token;
@@ -165,13 +165,13 @@ tg_attributes *tg_classify(const tg_domain *domain, const char *original)
 	}
 	else
 	{
-		result = tg_result_alloc(domain->default_attributes, original);
+		assert(domain->default_attributes && domain->default_attributes->magic == TG_ATTRIBUTES_MAGIC);
 
-		if(!domain->default_attributes)
-		{
-			result->pattern_id = domain->default_id;
-		}
+		result = tg_result_alloc(domain->default_attributes, original);
 	}
+
+	assert(result && result->magic == TG_RESULT_MAGIC);
+	assert(!result->error_code);
 
 	return result;
 
@@ -183,8 +183,10 @@ cerror:
 
 	tg_classify_free(classify);
 
-	result = tg_result_alloc(NULL, original);
-	result->error_code = 1;
+	result = domain->error_attributes;
+
+	assert(result && result->magic == TG_RESULT_MAGIC);
+	assert(result->error_code);
 
 	return result;
 }
@@ -225,47 +227,42 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 	return;
 }
 
-static tg_attributes *tg_result_alloc(tg_attributes *attributes, const char *input)
+static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input)
 {
-	tg_attributes *result;
+	tg_result *result;
 	tg_transformer *transformer;
 	tg_list *attribute_transformer;
 	tg_list_item *item, *item2;
 	char *transformed;
-	size_t key_len = 0, value_len = 0, pos;
+	size_t pos;
 
-	if(attributes)
+	if(attributes && !attributes->transformers)
 	{
-		assert(attributes->magic == TG_ATTRIBUTES_MAGIC);
-		assert(attributes->key_len >= (attributes->transformers ? attributes->transformers->size : 0));
-		key_len = attributes->key_len;
-		value_len = key_len - (attributes->transformers ? attributes->transformers->size : 0);
+		return attributes;
 	}
 
-	assert(input);
-
-	result = tg_attributes_alloc(key_len);
+	result = tg_attributes_alloc(attributes ? attributes->key_len : 0);
 
 	result->user_malloc = 1;
 
 	if(attributes)
 	{
+		assert(attributes->magic == TG_ATTRIBUTES_MAGIC);
+		assert(attributes->transformers && attributes->transformers->magic == TG_LIST_MAGIC);
+		assert(attributes->key_len >= attributes->transformers->size);
+		assert(input);
+
 		result->pattern_id = attributes->pattern_id;
 
 		memcpy(result->keys, attributes->keys, attributes->key_len * sizeof(char*));
-		memcpy(result->values, attributes->values, value_len * sizeof(char*));
-	}
-
-	if(attributes && attributes->transformers)
-	{
-		assert(attributes->transformers->magic == TG_LIST_MAGIC);
+		memcpy(result->values, attributes->values, attributes->key_len * sizeof(char*));
 
 		if(attributes->transformers->size)
 		{
 			result->free_list = tg_list_alloc(attributes->transformers->size * 3, (TG_FREE)free);
 		}
 
-		pos = value_len;
+		pos = attributes->key_len - attributes->transformers->size;
 
 		TG_LIST_FOREACH(attributes->transformers, item)
 		{
@@ -302,6 +299,18 @@ static tg_attributes *tg_result_alloc(tg_attributes *attributes, const char *inp
 	}
 
 	return result;
+}
+
+void tg_result_free(tg_result *result)
+{
+	assert(result && result->magic == TG_RESULT_MAGIC);
+
+	if(!result->user_malloc)
+	{
+		return;
+	}
+
+	tg_attributes_free(result);
 }
 
 static tg_classified *tg_classified_alloc(const tg_domain *domain)
