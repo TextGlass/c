@@ -2,7 +2,7 @@
 
 static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 				 tg_jsonfile *pattern_patch, tg_jsonfile *attribute_patch);
-static tg_list *tg_domain_list_get(tg_domain *domain, void (*free)(void *item));
+static tg_list *tg_domain_list_get(tg_domain *domain, void (*callback)(void *item));
 static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens);
 
 tg_domain *tg_domain_load(const char *pattern, const char *attribute,
@@ -14,6 +14,8 @@ tg_domain *tg_domain_load(const char *pattern, const char *attribute,
 	tg_jsonfile *attribute_patch_file = NULL;
 
 	//PARSE ATTRIBUTE FILE
+
+	assert(pattern);
 
 	tg_printd(1, "Pattern file: %s\n", pattern);
 
@@ -231,7 +233,7 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 
 	//ATTRIBUTE INDEX
 
-	domain->attribute_index = tg_hashtable_alloc(100, NULL);
+	domain->attribute_index = tg_hashtable_alloc(1000, NULL);
 
 	tg_attributes_json_index(domain, domain->pattern);
 	tg_attributes_json_index(domain, domain->pattern_patch);
@@ -444,7 +446,7 @@ void tg_domain_free(tg_domain *domain)
 	free(domain);
 }
 
-static tg_list *tg_domain_list_get(tg_domain *domain, void (*free)(void *item))
+static tg_list *tg_domain_list_get(tg_domain *domain, void (*callback)(void *item))
 {
 	tg_list *list;
 
@@ -452,12 +454,12 @@ static tg_list *tg_domain_list_get(tg_domain *domain, void (*free)(void *item))
 
 	if(domain->list_slab_pos >= domain->list_slab_size)
 	{
-		return tg_list_alloc(0, free);
+		return tg_list_alloc(0, callback);
 	}
 
 	list = &domain->list_slab[domain->list_slab_pos];
 
-	tg_list_init(list, 0, free);
+	tg_list_init(list, 0, callback);
 
 	domain->list_slab_pos++;
 

@@ -12,7 +12,6 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 	tg_classified *classify;
 	tg_pattern *winner, *candidate;
 	tg_result *result;
-	tg_list *tokens = NULL;
 	tg_list_item *item;
 	char *input, *ngram, *token;
 	size_t length, token_length;
@@ -61,13 +60,13 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 	//TOKEN SEPERATORS
 
-	tokens = tg_list_alloc(15, NULL);
+	classify->tokens = tg_list_alloc(15, NULL);
 
-	tg_split(input, length, domain->token_seperators, domain->token_seperator_len, tokens);
+	tg_split(input, length, domain->token_seperators, domain->token_seperator_len, classify->tokens);
 
 	if(tg_printd_debug_level >= 3)
 	{
-		TG_LIST_FOREACH(tokens, item)
+		TG_LIST_FOREACH(classify->tokens, item)
 		{
 			tg_printd(3, "Classify tokens: '%s'\n", (char*)item->value);
 		}
@@ -86,11 +85,11 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 	i = 0;
 
-	TG_LIST_FOREACH(tokens, item)
+	TG_LIST_FOREACH(classify->tokens, item)
 	{
 		for(j = domain->ngram_size; j > 0; j--)
 		{
-			if(i + j > tokens->size)
+			if(i + j > classify->tokens->size)
 			{
 				continue;
 			}
@@ -156,7 +155,6 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 	tg_printd(3, "Winner: %s\n", winner ? winner->pattern_id : NULL);
 
-	tg_list_free(tokens);
 	tg_classify_free(classify);
 
 	if(winner)
@@ -176,11 +174,6 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 	return result;
 
 cerror:
-	if(tokens)
-	{
-		tg_list_free(tokens);
-	}
-
 	tg_classify_free(classify);
 
 	result = domain->error_attributes;
@@ -335,6 +328,11 @@ static void tg_classify_free(tg_classified *classify)
 	assert(classify && classify->magic == TG_CLASSIFIED_MAGIC);
 
 	tg_list_free(classify->free_list);
+
+	if(classify->tokens)
+	{
+		tg_list_free(classify->tokens);
+	}
 
 	if(classify->candidates)
 	{

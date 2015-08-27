@@ -15,9 +15,9 @@
 #include "jsmn.h"
 
 
-#define TEXTGLASS_VERSION		"1.0.0 alpha"
+#define TEXTGLASS_VERSION	"1.0.0 alpha"
 
-#define TG_DEBUG_LOGGING		1
+#define TG_DEBUG_LOGGING	1
 
 
 typedef struct
@@ -154,6 +154,7 @@ typedef struct
 
 	const tg_domain		*domain;
 
+	tg_list			*tokens;
 	tg_list			*matched_tokens;
 	tg_list			*candidates;
 
@@ -178,7 +179,7 @@ typedef struct tg_transformer
 tg_transformer;
 
 
-#define TG_FREE				void(*)(void*)
+#define TG_FREE			void(*)(void*)
 
 
 extern int tg_printd_debug_level;

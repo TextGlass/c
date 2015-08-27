@@ -1,6 +1,6 @@
 #include "list.h"
 
-tg_list *tg_list_alloc(size_t initial_len, void (*free)(void *item))
+tg_list *tg_list_alloc(size_t initial_len, void (*callback)(void *item))
 {
 	tg_list *list;
 
@@ -17,7 +17,7 @@ tg_list *tg_list_alloc(size_t initial_len, void (*free)(void *item))
 
 	assert(list);
 
-	tg_list_init(list, initial_len, free);
+	tg_list_init(list, initial_len, callback);
 
 	list->malloc = 1;
 
@@ -26,14 +26,14 @@ tg_list *tg_list_alloc(size_t initial_len, void (*free)(void *item))
 	return list;
 }
 
-void tg_list_init(tg_list * list, size_t initial_len, void (*free)(void *item))
+void tg_list_init(tg_list * list, size_t initial_len, void (*callback)(void *item))
 {
 	assert(list && list->magic != TG_LIST_MAGIC);
 
 	list->magic = TG_LIST_MAGIC;
 	list->size = 0;
 	list->prealloc_len = TG_LIST_PREALLOC + initial_len;
-	list->callback = free;
+	list->callback = callback;
 	list->malloc = 0;
 
 	TAILQ_INIT(&list->head);

@@ -10,6 +10,10 @@ static int tg_test_attributes(tg_result *result, jsmntok_t *attributes);
 
 int main(int argc, char **argv)
 {
+	tg_result *result;
+	tg_jsonfile *test_file;
+	tg_domain *domain = NULL;
+	struct timespec start, end, diff;
 	tg_list *tests;
 	tg_list_item *item;
 	char *pattern = NULL;
@@ -18,10 +22,6 @@ int main(int argc, char **argv)
 	char *attribute_patch = NULL;
 	char *test_string = NULL;
 	char *option, buf[128];
-	tg_result *result;
-	tg_jsonfile *test_file;
-	tg_domain *domain = NULL;
-	struct timespec start, end, diff;
 	int i, exit = 0;
 	size_t j;
 

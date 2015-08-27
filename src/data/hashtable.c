@@ -4,7 +4,7 @@ static int tg_hashtable_cmp(const tg_hashtable_key *k1, const tg_hashtable_key *
 
 RB_GENERATE(tg_hashtable_rbtree, tg_hashtable_key, entry, tg_hashtable_cmp);
 
-tg_hashtable *tg_hashtable_alloc(size_t buckets, void (*free)(void *value))
+tg_hashtable *tg_hashtable_alloc(size_t buckets, void (*callback)(void *value))
 {
 	tg_hashtable *hashtable;
 	tg_hashtable_bucket *bucket;
@@ -18,7 +18,7 @@ tg_hashtable *tg_hashtable_alloc(size_t buckets, void (*free)(void *value))
 
 	hashtable->magic = TG_HASHTABLE_MAGIC;
 	hashtable->bucket_len = buckets;
-	hashtable->callback = free;
+	hashtable->callback = callback;
 
 	hashtable->buckets = malloc(hashtable->bucket_len * sizeof(tg_hashtable_bucket));
 
