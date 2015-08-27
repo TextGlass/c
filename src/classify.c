@@ -3,7 +3,7 @@
 static void tg_classify_match(tg_classified *classify, const char *token);
 static void tg_classify_free(tg_classified *classify);
 
-static tg_attributes *tg_result_alloc(tg_attributes *attributes, const char *input);
+static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input);
 static tg_classified *tg_classified_alloc(const tg_domain *domain);
 
 tg_result *tg_classify(const tg_domain *domain, const char *original)
@@ -229,7 +229,7 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 
 static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input)
 {
-	tg_result *result;
+	tg_attributes *result;
 	tg_transformer *transformer;
 	tg_list *attribute_transformer;
 	tg_list_item *item, *item2;
@@ -238,7 +238,7 @@ static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input)
 
 	if(attributes && !attributes->transformers)
 	{
-		return attributes;
+		return (tg_result*)attributes;
 	}
 
 	result = tg_attributes_alloc(attributes ? attributes->key_len : 0);
@@ -298,7 +298,7 @@ static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input)
 		}
 	}
 
-	return result;
+	return (tg_result*)result;
 }
 
 void tg_result_free(tg_result *result)
@@ -310,7 +310,7 @@ void tg_result_free(tg_result *result)
 		return;
 	}
 
-	tg_attributes_free(result);
+	tg_attributes_free((tg_attributes*)result);
 }
 
 static tg_classified *tg_classified_alloc(const tg_domain *domain)

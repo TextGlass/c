@@ -80,7 +80,7 @@ typedef struct
 }
 tg_attributes;
 
-typedef tg_attributes		tg_result;
+typedef const tg_attributes	tg_result;
 #define TG_RESULT_MAGIC		TG_ATTRIBUTES_MAGIC
 
 typedef struct

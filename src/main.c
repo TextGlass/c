@@ -4,7 +4,7 @@
 
 static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file);
 static void tg_printHelp();
-static int tg_test_attributes(tg_attributes *result, jsmntok_t *attributes);
+static int tg_test_attributes(tg_result *result, jsmntok_t *attributes);
 
 #define TG_MAIN_ERROR(msg) do {fprintf(stderr, "%s", msg); exit = 1; goto mdone; } while(0)
 
