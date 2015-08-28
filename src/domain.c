@@ -349,9 +349,9 @@ static long tg_domain_create_pindex(tg_domain *domain, jsmntok_t *tokens)
 				return -1;
 			}
 
-			pattern->attribute = tg_attributes_build(domain, pattern->pattern_id);
+			pattern->attributes = tg_attributes_build(domain, pattern->pattern_id);
 
-			if(!pattern->attribute)
+			if(!pattern->attributes)
 			{
 				return -1;
 			}

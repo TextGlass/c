@@ -242,7 +242,7 @@ static void tg_pattern_init(tg_pattern *pattern)
 	pattern->pattern_tokens_init = 0;
 	pattern->malloc = 0;
 	pattern->ref_count = 0;
-	pattern->attribute = NULL;
+	pattern->attributes = NULL;
 }
 
 void tg_pattern_free(tg_pattern *pattern)
@@ -262,9 +262,9 @@ void tg_pattern_free(tg_pattern *pattern)
 		tg_list_free(&pattern->pattern_tokens);
 	}
 
-	if(pattern->attribute)
+	if(pattern->attributes)
 	{
-		tg_attributes_free(pattern->attribute);
+		tg_attributes_free(pattern->attributes);
 	}
 
 	pattern->magic = 0;

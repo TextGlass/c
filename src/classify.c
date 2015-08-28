@@ -159,7 +159,10 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 	if(winner)
 	{
-		result = tg_result_alloc(winner->attribute, original);
+		assert(winner->magic == TG_PATTERN_MAGIC);
+		assert(winner->attributes && winner->attributes->magic == TG_ATTRIBUTES_MAGIC);
+
+		result = tg_result_alloc(winner->attributes, original);
 	}
 	else
 	{

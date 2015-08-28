@@ -102,7 +102,7 @@ typedef struct
 
 	unsigned long		ref_count;
 
-	tg_attributes		*attribute;
+	tg_attributes		*attributes;
 }
 tg_pattern;
 
