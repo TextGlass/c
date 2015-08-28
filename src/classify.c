@@ -30,9 +30,7 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 	tg_list_add(classify->free_list, input);
 
-	length = strlen(input);
-
-	tg_printd(3, "Classify input on %s: '%s':%zu\n", domain->domain, input, length);
+	tg_printd(3, "Classify input on %s: '%s'\n", domain->domain, input);
 
 	//TRANSFORMERS
 
@@ -52,15 +50,15 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 				goto cerror;
 			}
 
-			length = strlen(input);
-
-			tg_printd(3, "Transformed: '%s':%zu\n", input, length);
+			tg_printd(3, "Transformed: '%s'\n", input);
 		}
 	}
 
 	//TOKEN SEPERATORS
 
 	classify->tokens = tg_list_alloc(15, NULL);
+
+	length = strlen(input);
 
 	tg_split(input, length, domain->token_seperators, domain->token_seperator_len, classify->tokens);
 

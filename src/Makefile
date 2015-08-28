@@ -26,7 +26,7 @@ SOURCE= \
 
 OBJS=$(SOURCE:.c=.o)
 
-.PHONY: clean lib
+.PHONY: clean lib all
 
 all:			textglass_client lib
 lib:			libtextglass.so libtextglass.a
