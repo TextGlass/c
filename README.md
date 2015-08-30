@@ -23,7 +23,7 @@ int main()
 
   if(!domain)
   {
-    fprintf(stderr, "Couldn't load domain");
+    fprintf(stderr, "Couldn't load domain\n");
     return 1;
   }
 
