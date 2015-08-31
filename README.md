@@ -29,7 +29,7 @@ int main()
 
   result = tg_classify(domain, test_string);
 
-  if(result->error_code) //transformer error
+  if(result->error_code) //input transformer error
   {
     printf("Test error: %d\n", result->error_code);
   }
