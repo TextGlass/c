@@ -225,6 +225,7 @@ void tg_domain_free(tg_domain *domain);
 
 
 tg_result *tg_classify(const tg_domain *domain, const char *original);
+const char *tg_result_get(tg_result *result, const char *key);
 void tg_result_free(tg_result *result);
 
 

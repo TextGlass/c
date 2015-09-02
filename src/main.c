@@ -321,8 +321,7 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 
 static int tg_test_attributes(tg_result *result, jsmntok_t *attributes)
 {
-	const char *key, *value;
-	size_t j;
+	const char *key, *expected, *value;
 	long i;
 
 	assert(result && result->magic == TG_RESULT_MAGIC);
@@ -332,27 +331,13 @@ static int tg_test_attributes(tg_result *result, jsmntok_t *attributes)
 		for(i = 1; i < attributes[0].skip; i += attributes[i].skip)
 		{
 			key = attributes[i].str;
-			value = attributes[i + 1].str;
+			expected = attributes[i + 1].str;
 
-			for(j = 0; j < result->key_len; j++)
-			{
-				if(!strcmp(result->keys[j], key))
-				{
-					if(strcmp(result->values[j], value))
-					{
-						tg_printd(2, "FAILED: expected '%s'='%s', got: %s\n", key, value, result->values[j]);
-						return 1;
-					}
-					else
-					{
-						break;
-					}
-				}
-			}
+			value = tg_result_get(result, key);
 
-			if(j >= result->key_len)
+			if(!value || strcmp(value, expected))
 			{
-				tg_printd(2, "FAILED: expected '%s', not found\n", key);
+				tg_printd(2, "FAILED: expected '%s'='%s', got: %s\n", key, expected, value);
 				return 1;
 			}
 		}

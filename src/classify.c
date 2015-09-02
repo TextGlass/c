@@ -313,6 +313,23 @@ static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input)
 	return (tg_result*)result;
 }
 
+const char *tg_result_get(tg_result *result, const char *key)
+{
+	size_t i;
+
+	assert(result && result->magic == TG_RESULT_MAGIC);
+
+	for(i = 0; i < result->key_len; i++)
+	{
+		if(!strcmp(result->keys[i], key))
+		{
+			return result->values[i];
+		}
+	}
+
+	return NULL;
+}
+
 void tg_result_free(tg_result *result)
 {
 	assert(result && result->magic == TG_RESULT_MAGIC);
