@@ -33,7 +33,7 @@
 #include "jsmn.h"
 
 
-#define TEXTGLASS_VERSION	"1.0.0 alpha"
+#define TEXTGLASS_VERSION	"1.0.0-beta"
 
 #define TG_DEBUG_LOGGING	1
 

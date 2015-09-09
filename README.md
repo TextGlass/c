@@ -55,7 +55,7 @@ int main()
 ```
 > gcc -o client client.c ../c/src/libtextglass.a -I../c/src/ -I../c/src/data -I../c/src/jsmn
 > ./client
-TextGlass C Client 1.0.0 alpha
+TextGlass C Client 1.0.0-beta
   Pattern file: ../browser/domain/patterns.json
   Loaded pattern file, domain: browser, version: 1.0, json tokens: 380
   Found 5 tokenSeperator(s)
