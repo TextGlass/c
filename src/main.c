@@ -43,6 +43,8 @@ int main(int argc, char **argv)
 	int i, exit = 0;
 	size_t j;
 
+	tg_printd_debug_level = 1;
+
 	tg_printd(0, "TextGlass C Client %s\n", TEXTGLASS_VERSION);
 
 	tests = tg_list_alloc(3, NULL);

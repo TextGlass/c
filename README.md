@@ -19,6 +19,8 @@ int main()
 
   printf("TextGlass C Client %s\n", TEXTGLASS_VERSION);
 
+  tg_printd_debug_level = 1;
+
   domain = tg_domain_load(patterns, NULL, NULL, NULL);
 
   if(!domain)
@@ -29,7 +31,7 @@ int main()
 
   result = tg_classify(domain, test_string);
 
-  if(result->error_code) //input transformer error
+  if(result->error_code) //fatal transformer error
   {
     printf("Test error: %d\n", result->error_code);
   }

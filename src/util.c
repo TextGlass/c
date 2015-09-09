@@ -18,7 +18,7 @@
 
 #include "textglass.h"
 
-int tg_printd_debug_level = 1;
+int tg_printd_debug_level = -1;
 
 void tg_printd(int level, const char* fmt, ...)
 {
