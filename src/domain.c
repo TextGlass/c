@@ -409,45 +409,14 @@ void tg_domain_free(tg_domain *domain)
 
 	assert(domain->magic == TG_DOMAIN_MAGIC);
 
-	if(domain->patterns)
-	{
-		tg_hashtable_free(domain->patterns);
-	}
-
-	if(domain->list_slab)
-	{
-		free(domain->list_slab);
-	}
-
-	if(domain->pattern_slab)
-	{
-		free(domain->pattern_slab);
-	}
-
-	if(domain->token_seperators)
-	{
-		free(domain->token_seperators);
-	}
-
-	if(domain->attribute_index)
-	{
-		tg_hashtable_free(domain->attribute_index);
-	}
-
-	if(domain->default_attributes)
-	{
-		tg_attributes_free(domain->default_attributes);
-	}
-
-	if(domain->error_attributes)
-	{
-		tg_attributes_free(domain->error_attributes);
-	}
-
-	if(domain->input_transformers)
-	{
-		tg_list_free(domain->input_transformers);
-	}
+	tg_hashtable_free(domain->patterns);
+	free(domain->list_slab);
+	free(domain->pattern_slab);
+	free(domain->token_seperators);
+	tg_hashtable_free(domain->attribute_index);
+	tg_attributes_free(domain->default_attributes);
+	tg_attributes_free(domain->error_attributes);
+	tg_list_free(domain->input_transformers);
 
 	tg_jsonfile_free(domain->pattern);
 	tg_jsonfile_free(domain->attribute);

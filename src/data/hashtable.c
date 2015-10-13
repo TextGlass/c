@@ -256,6 +256,11 @@ void tg_hashtable_free(tg_hashtable *hashtable)
 	tg_hashtable_key *key, *next;
 	size_t i;
 
+	if(!hashtable)
+	{
+		return;
+	}
+
 	assert(hashtable && hashtable->magic == TG_HASHTABLE_MAGIC);
 
 	for(i = 0; i < hashtable->bucket_len; i++)
@@ -287,13 +292,9 @@ void tg_hashtable_free(tg_hashtable *hashtable)
 		bucket->magic = 0;
 	}
 
-	if(hashtable->buckets)
-	{
-		free(hashtable->buckets);
-
-		hashtable->bucket_len = 0;
-		hashtable->buckets = NULL;
-	}
+	free(hashtable->buckets);
+	hashtable->bucket_len = 0;
+	hashtable->buckets = NULL;
 
 	hashtable->magic = 0;
 

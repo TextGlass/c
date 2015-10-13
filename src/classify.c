@@ -365,20 +365,9 @@ static void tg_classify_free(tg_classified *classify)
 
 	tg_list_free(classify->free_list);
 
-	if(classify->tokens)
-	{
-		tg_list_free(classify->tokens);
-	}
-
-	if(classify->candidates)
-	{
-		tg_list_free(classify->candidates);
-	}
-
-	if(classify->matched_tokens)
-	{
-		tg_list_free(classify->matched_tokens);
-	}
+	tg_list_free(classify->tokens);
+	tg_list_free(classify->candidates);
+	tg_list_free(classify->matched_tokens);
 
 	classify->magic = 0;
 

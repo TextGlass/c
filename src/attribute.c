@@ -256,19 +256,17 @@ tg_attributes *tg_attributes_alloc(size_t keys)
 
 void tg_attributes_free(tg_attributes *attributes)
 {
+	if(!attributes)
+	{
+		return;
+	}
+
 	assert(attributes && attributes->magic == TG_ATTRIBUTES_MAGIC);
 
 	attributes->magic = 0;
 
-	if(attributes->free_list)
-	{
-		tg_list_free(attributes->free_list);
-	}
-
-	if(attributes->transformers)
-	{
-		tg_list_free(attributes->transformers);
-	}
+	tg_list_free(attributes->free_list);
+	tg_list_free(attributes->transformers);
 
 	free(attributes);
 }

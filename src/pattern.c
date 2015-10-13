@@ -280,10 +280,7 @@ void tg_pattern_free(tg_pattern *pattern)
 		tg_list_free(&pattern->pattern_tokens);
 	}
 
-	if(pattern->attributes)
-	{
-		tg_attributes_free(pattern->attributes);
-	}
+	tg_attributes_free(pattern->attributes);
 
 	pattern->magic = 0;
 

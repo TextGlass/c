@@ -156,10 +156,7 @@ void tg_jsonfile_free(tg_jsonfile *jsonfile)
 
 	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
 
-	if(jsonfile->json)
-	{
-		free(jsonfile->json);
-	}
+	free(jsonfile->json);
 
 	tg_jsonfile_free_tokens(jsonfile);
 
@@ -177,12 +174,9 @@ void tg_jsonfile_free_tokens(tg_jsonfile *jsonfile)
 
 	assert(jsonfile->magic == TG_JSONFILE_MAGIC);
 
-	if(jsonfile->tokens)
-	{
-		free(jsonfile->tokens);
-		jsonfile->token_len = 0;
-		jsonfile->tokens = NULL;
-	}
+	free(jsonfile->tokens);
+	jsonfile->token_len = 0;
+	jsonfile->tokens = NULL;
 }
 
 jsmntok_t *tg_json_get(jsmntok_t *tokens, const char *field)

@@ -178,6 +178,11 @@ void tg_list_free(tg_list *list)
 {
 	tg_list_item *item, *next;
 
+	if(!list)
+	{
+		return;
+	}
+
 	assert(list && list->magic == TG_LIST_MAGIC);
 
 	TAILQ_FOREACH_SAFE(item, &list->head, entry, next)
