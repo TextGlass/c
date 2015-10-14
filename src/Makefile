@@ -19,6 +19,7 @@ SOURCE= \
 	attribute.c \
 	transformer.c \
 	jsonfile.c \
+	memalloc.c \
 	util.c \
 	data/hashtable.c \
 	data/list.c \

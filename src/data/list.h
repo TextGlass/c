@@ -53,7 +53,7 @@ typedef struct
 
 	tg_list_head			head;
 
-	void(*callback)			(void*);
+	void				(*callback)(void*);
 
 	size_t				size;
 	size_t				prealloc_len;

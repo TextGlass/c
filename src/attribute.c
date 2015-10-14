@@ -238,11 +238,16 @@ aerror:
 	return NULL;
 }
 
+inline size_t tg_attributes_size(size_t keys)
+{
+	return sizeof(tg_attributes) + (sizeof(char*) * keys * 2);
+}
+
 tg_attributes *tg_attributes_alloc(size_t keys)
 {
 	tg_attributes *attributes;
 
-	attributes = calloc(1, sizeof(tg_attributes) + (sizeof(char*) * keys * 2));
+	attributes = malloc(tg_attributes_size(keys));
 
 	assert(attributes);
 
@@ -255,10 +260,14 @@ void tg_attributes_init(tg_attributes *attributes, size_t keys)
 {
 	assert(attributes);
 
+	memset(attributes, 0, sizeof(tg_attributes));
+
 	attributes->magic = TG_ATTRIBUTES_MAGIC;
 	attributes->key_len = keys;
 	attributes->keys = attributes->buf;
 	attributes->values = &attributes->buf[attributes->key_len];
+
+	tg_memalloc_init(&attributes->memalloc, NULL, 0);
 }
 
 void tg_attributes_free(tg_attributes *attributes)
@@ -269,10 +278,12 @@ void tg_attributes_free(tg_attributes *attributes)
 	}
 
 	assert(attributes && attributes->magic == TG_ATTRIBUTES_MAGIC);
+	assert(attributes->memalloc.magic == TG_MEMALLOC_MAGIC);
 
 	attributes->magic = 0;
+	attributes->memalloc.magic = 0;
 
-	tg_list_free(attributes->free_list);
+	tg_list_free(attributes->memalloc.free_list);
 	tg_list_free(attributes->transformers);
 
 	free(attributes);

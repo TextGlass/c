@@ -19,22 +19,22 @@
 #include "textglass.h"
 
 static tg_transformer *tg_t_lowercase_alloc(jsmntok_t *token);
-char *tg_t_lowercase(tg_list *free_list, tg_transformer *transformer, char *input);
+char *tg_t_lowercase(tg_memalloc *memalloc, tg_transformer *transformer, char *input);
 
 static tg_transformer *tg_t_uppercase_alloc(jsmntok_t *token);
-char *tg_t_uppercase(tg_list *free_list, tg_transformer *transformer, char *input);
+char *tg_t_uppercase(tg_memalloc *memalloc, tg_transformer *transformer, char *input);
 
 static tg_transformer *tg_t_replace_alloc(jsmntok_t *token, int first);
-char *tg_t_replace(tg_list *free_list, tg_transformer *transformer, char *input);
+char *tg_t_replace(tg_memalloc *memalloc, tg_transformer *transformer, char *input);
 
 static tg_transformer *tg_t_splitget_alloc(jsmntok_t *token);
-char *tg_t_splitget(tg_list *free_list, tg_transformer *transformer, char *input);
+char *tg_t_splitget(tg_memalloc *memalloc, tg_transformer *transformer, char *input);
 
 static tg_transformer *tg_t_isnumber_alloc(jsmntok_t *token);
-char *tg_t_isnumber(tg_list *free_list, tg_transformer *transformer, char *input);
+char *tg_t_isnumber(tg_memalloc *memalloc, tg_transformer *transformer, char *input);
 
 static tg_transformer *tg_t_substring_alloc(jsmntok_t *token);
-char *tg_t_substring(tg_list *free_list, tg_transformer *transformer, char *input);
+char *tg_t_substring(tg_memalloc *memalloc, tg_transformer *transformer, char *input);
 
 tg_list *tg_transformer_compile(jsmntok_t *tokens)
 {
@@ -152,9 +152,9 @@ static tg_transformer *tg_t_lowercase_alloc(jsmntok_t *token)
 	return lowercase;
 }
 
-char *tg_t_lowercase(tg_list *free_list, tg_transformer *transformer, char *input)
+char *tg_t_lowercase(tg_memalloc *memalloc, tg_transformer *transformer, char *input)
 {
-	assert(free_list && free_list->magic == TG_LIST_MAGIC);
+	assert(memalloc && memalloc->magic == TG_MEMALLOC_MAGIC);
 	assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
 	assert(input);
 
@@ -186,9 +186,9 @@ static tg_transformer *tg_t_uppercase_alloc(jsmntok_t *token)
 	return uppercase;
 }
 
-char *tg_t_uppercase(tg_list *free_list, tg_transformer *transformer, char *input)
+char *tg_t_uppercase(tg_memalloc *memalloc, tg_transformer *transformer, char *input)
 {
-	assert(free_list && free_list->magic == TG_LIST_MAGIC);
+	assert(memalloc && memalloc->magic == TG_MEMALLOC_MAGIC);
 	assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
 	assert(input);
 
@@ -238,7 +238,7 @@ static tg_transformer *tg_t_replace_alloc(jsmntok_t *token, int first)
 	return replace;
 }
 
-char *tg_t_replace(tg_list *free_list, tg_transformer *transformer, char *input)
+char *tg_t_replace(tg_memalloc *memalloc, tg_transformer *transformer, char *input)
 {
 	const char *find, *replace_with;
 	char *dest, *dest_new;
@@ -248,7 +248,7 @@ char *tg_t_replace(tg_list *free_list, tg_transformer *transformer, char *input)
 	long replace_count;
 	long first;
 
-	assert(free_list && free_list->magic == TG_LIST_MAGIC);
+	assert(memalloc && memalloc->magic == TG_MEMALLOC_MAGIC);
 	assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
 	assert(input);
 
@@ -283,7 +283,7 @@ char *tg_t_replace(tg_list *free_list, tg_transformer *transformer, char *input)
 
 		assert(dest);
 
-		tg_list_add(free_list, dest);
+		tg_memalloc_add_free(memalloc, dest);
 
 		dest[0] = '\0';
 	}
@@ -300,7 +300,7 @@ char *tg_t_replace(tg_list *free_list, tg_transformer *transformer, char *input)
 
 			assert(dest_new);
 
-			tg_list_add(free_list, dest_new);
+			tg_memalloc_add_free(memalloc, dest_new);
 
 			memcpy(dest_new, dest, dest_len);
 
@@ -373,7 +373,7 @@ static tg_transformer *tg_t_splitget_alloc(jsmntok_t *token)
 	return splitget;
 }
 
-char *tg_t_splitget(tg_list *free_list, tg_transformer *transformer, char *input)
+char *tg_t_splitget(tg_memalloc *memalloc, tg_transformer *transformer, char *input)
 {
 	tg_list *split;
 	tg_list_item *item;
@@ -381,7 +381,7 @@ char *tg_t_splitget(tg_list *free_list, tg_transformer *transformer, char *input
 	char *ret = NULL;
 	long get;
 
-	assert(free_list && free_list->magic == TG_LIST_MAGIC);
+	assert(memalloc && memalloc->magic == TG_MEMALLOC_MAGIC);
 	assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
 	assert(input);
 
@@ -434,11 +434,11 @@ static tg_transformer *tg_t_isnumber_alloc(jsmntok_t *token)
 	return isnumber;
 }
 
-char *tg_t_isnumber(tg_list *free_list, tg_transformer *transformer, char *input)
+char *tg_t_isnumber(tg_memalloc *memalloc, tg_transformer *transformer, char *input)
 {
 	char *end;
 
-	assert(free_list && free_list->magic == TG_LIST_MAGIC);
+	assert(memalloc && memalloc->magic == TG_MEMALLOC_MAGIC);
 	assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
 	assert(input);
 
@@ -502,9 +502,9 @@ static tg_transformer *tg_t_substring_alloc(jsmntok_t *token)
 	return substring;
 }
 
-char *tg_t_substring(tg_list *free_list, tg_transformer *transformer, char *input)
+char *tg_t_substring(tg_memalloc *memalloc, tg_transformer *transformer, char *input)
 {
-	assert(free_list && free_list->magic == TG_LIST_MAGIC);
+	assert(memalloc && memalloc->magic == TG_MEMALLOC_MAGIC);
 	assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
 	assert(input);
 

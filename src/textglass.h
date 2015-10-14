@@ -56,6 +56,23 @@ typedef struct
 tg_jsonfile;
 
 
+typedef struct
+{
+	unsigned int		magic;
+#define TG_MEMALLOC_MAGIC	0xF128ED6B
+
+	void			*buf;
+
+	size_t			available;
+	size_t			position;
+
+	tg_list			*free_list;
+
+	int			enabled:1;
+}
+tg_memalloc;
+
+
 typedef enum
 {
 	TG_RANKTYPE_NONE = 0,
@@ -73,6 +90,7 @@ typedef enum
 }
 tg_pattern_type;
 
+
 typedef enum
 {
 	TG_ERROR_NONE = 0,
@@ -89,6 +107,8 @@ typedef struct
 
 	tg_error_code		error_code;
 
+	tg_memalloc		memalloc;
+
 	const char		*pattern_id;
 
 	int			user_malloc:1;
@@ -100,14 +120,13 @@ typedef struct
 
 	tg_list			*transformers;
 
-	tg_list			*free_list;
-
 	const char		*buf[0];
 }
 tg_attributes;
 
 typedef const tg_attributes	tg_result;
 #define TG_RESULT_MAGIC		TG_ATTRIBUTES_MAGIC
+
 
 typedef struct
 {
@@ -184,7 +203,7 @@ typedef struct
 	tg_list			*matched_tokens;
 	tg_list			*candidates;
 
-	tg_list			*free_list;
+	tg_memalloc		memalloc;
 }
 tg_classified;
 
@@ -194,7 +213,7 @@ typedef struct tg_transformer
 	unsigned int		magic;
 #define TG_TRANSFORMER_MAGIC	0x940CE11D
 
-	char*(*transformer)	(tg_list*,struct tg_transformer*,char*);
+	char*			(*transformer)(tg_memalloc*,struct tg_transformer*,char*);
 
 	const char		*s1;
 	const char		*s2;
@@ -233,6 +252,7 @@ void tg_domain_free(tg_domain *domain);
 
 
 tg_result *tg_classify(const tg_domain *domain, const char *original);
+tg_result *tg_classify_fixed(const tg_domain *domain, const char *original, void *buf, size_t available);
 const char *tg_result_get(tg_result *result, const char *key);
 void tg_result_free(tg_result *result);
 
@@ -249,9 +269,16 @@ tg_list *tg_transformer_compile(jsmntok_t *tokens);
 void tg_transformer_free(tg_transformer *transformer);
 
 
+void tg_memalloc_init(tg_memalloc *memalloc, void *buf, size_t available);
+tg_attributes *tg_memalloc_bootstrap(void *buf, size_t available, size_t keys);
+void *tg_memalloc_malloc(tg_memalloc *memalloc, size_t size);
+void tg_memalloc_add_free(tg_memalloc *memalloc, void *ptr);
+
+
 void tg_attributes_json_index(tg_domain *domain, tg_jsonfile *json_file);
 tg_attributes *tg_attributes_build(tg_domain *domain, const char *pattern_id);
 tg_attributes *tg_attributes_alloc(size_t keys);
+inline size_t tg_attributes_size(size_t keys);
 void tg_attributes_init(tg_attributes *attributes, size_t keys);
 void tg_attributes_free(tg_attributes *attributes);
 

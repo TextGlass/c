@@ -21,10 +21,15 @@
 static void tg_classify_match(tg_classified *classify, const char *token);
 static void tg_classify_free(tg_classified *classify);
 
-static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input);
+static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input, void *buf, size_t available);
 static tg_classified *tg_classified_alloc(const tg_domain *domain);
 
 tg_result *tg_classify(const tg_domain *domain, const char *original)
+{
+	return tg_classify_fixed(domain, original, NULL, 0);
+}
+
+tg_result *tg_classify_fixed(const tg_domain *domain, const char *original, void *buf, size_t available)
 {
 	tg_transformer *transformer;
 	tg_classified *classify;
@@ -47,7 +52,7 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 	assert(input);
 
-	tg_list_add(classify->free_list, input);
+	tg_memalloc_add_free(&classify->memalloc, input);
 
 	tg_printd(3, "Classify input on %s: '%s'\n", domain->domain, input);
 
@@ -61,7 +66,7 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 			assert(transformer && transformer->magic == TG_TRANSFORMER_MAGIC);
 
-			input = transformer->transformer(classify->free_list, transformer, input);
+			input = transformer->transformer(&classify->memalloc, transformer, input);
 
 			if(!input)
 			{
@@ -96,7 +101,7 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 
 	assert(ngram);
 
-	tg_list_add(classify->free_list, ngram);
+	tg_memalloc_add_free(&classify->memalloc, ngram);
 
 	classify->matched_tokens = tg_list_alloc(15, NULL);
 	classify->candidates = tg_list_alloc(15, NULL);
@@ -180,13 +185,13 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 		assert(winner->magic == TG_PATTERN_MAGIC);
 		assert(winner->attributes && winner->attributes->magic == TG_ATTRIBUTES_MAGIC);
 
-		result = tg_result_alloc(winner->attributes, original);
+		result = tg_result_alloc(winner->attributes, original, buf, available);
 	}
 	else
 	{
 		assert(domain->default_attributes && domain->default_attributes->magic == TG_ATTRIBUTES_MAGIC);
 
-		result = tg_result_alloc(domain->default_attributes, original);
+		result = tg_result_alloc(domain->default_attributes, original, buf, available);
 	}
 
 	assert(result && result->magic == TG_RESULT_MAGIC);
@@ -221,7 +226,7 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 	{
 		matched = strdup(token);
 
-		tg_list_add(classify->free_list, matched);
+		tg_memalloc_add_free(&classify->memalloc, matched);
 
 		tg_list_add(classify->matched_tokens, matched);
 
@@ -241,23 +246,34 @@ static void tg_classify_match(tg_classified *classify, const char *token)
 	return;
 }
 
-static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input)
+static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input, void *buf, size_t available)
 {
 	tg_attributes *result;
 	tg_transformer *transformer;
 	tg_list *attribute_transformer;
 	tg_list_item *item, *item2;
 	char *transformed;
-	size_t pos;
+	size_t pos, len;
 
 	if(attributes && !attributes->transformers)
 	{
 		return (tg_result*)attributes;
 	}
 
-	result = tg_attributes_alloc(attributes ? attributes->key_len : 0);
+	if(available)
+	{
+		result = tg_memalloc_bootstrap(buf, available, attributes ? attributes->key_len : 0);
 
-	result->user_malloc = 1;
+		//TODO safe fail here
+		assert(result);
+
+		assert(result->memalloc.enabled);
+	}
+	else
+	{
+		result = tg_attributes_alloc(attributes ? attributes->key_len : 0);
+		result->user_malloc = 1;
+	}
 
 	if(attributes)
 	{
@@ -271,9 +287,9 @@ static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input)
 		memcpy(result->keys, attributes->keys, attributes->key_len * sizeof(char*));
 		memcpy(result->values, attributes->values, attributes->key_len * sizeof(char*));
 
-		if(attributes->transformers->size)
+		if(attributes->transformers->size && !result->memalloc.enabled)
 		{
-			result->free_list = tg_list_alloc(attributes->transformers->size * 3, (TG_FREE)free);
+			result->memalloc.free_list = tg_list_alloc(attributes->transformers->size * 3, (TG_FREE)free);
 		}
 
 		pos = attributes->key_len - attributes->transformers->size;
@@ -286,17 +302,21 @@ static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input)
 
 			tg_printd(4, "Transforming: '%s'\n", input);
 
-			transformed = strdup(input);
+			len = strlen(input) + 1;
+			transformed = tg_memalloc_malloc(&attributes->memalloc, len);
 
+			//TODO safe fail here
 			assert(transformed);
 
-			tg_list_add(result->free_list, transformed);
+			strncpy(transformed, input, len);
+
+			tg_memalloc_add_free(&result->memalloc, transformed);
 
 			TG_LIST_FOREACH(attribute_transformer, item2)
 			{
 				transformer = (tg_transformer*)item2->value;
 
-				transformed = transformer->transformer(result->free_list, transformer, transformed);
+				transformed = transformer->transformer(&result->memalloc, transformer, transformed);
 
 				if(!transformed)
 				{
@@ -335,8 +355,9 @@ const char *tg_result_get(tg_result *result, const char *key)
 void tg_result_free(tg_result *result)
 {
 	assert(result && result->magic == TG_RESULT_MAGIC);
+	assert(result->memalloc.magic == TG_MEMALLOC_MAGIC);
 
-	if(!result->user_malloc)
+	if(!result->user_malloc || result->memalloc.enabled)
 	{
 		return;
 	}
@@ -356,7 +377,10 @@ static tg_classified *tg_classified_alloc(const tg_domain *domain)
 
 	classified->magic = TG_CLASSIFIED_MAGIC;
 	classified->domain = domain;
-	classified->free_list = tg_list_alloc(15, (TG_FREE)&free);
+
+	tg_memalloc_init(&classified->memalloc, NULL, 0);
+
+	classified->memalloc.free_list = tg_list_alloc(15, (TG_FREE)&free);
 
 	return classified;
 }
@@ -364,8 +388,10 @@ static tg_classified *tg_classified_alloc(const tg_domain *domain)
 static void tg_classify_free(tg_classified *classify)
 {
 	assert(classify && classify->magic == TG_CLASSIFIED_MAGIC);
+	assert(classify->memalloc.magic == TG_MEMALLOC_MAGIC);
 
-	tg_list_free(classify->free_list);
+	tg_list_free(classify->memalloc.free_list);
+	classify->memalloc.magic = 0;
 
 	tg_list_free(classify->tokens);
 	tg_list_free(classify->candidates);
