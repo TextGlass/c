@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 	char *attribute_patch = NULL;
 	char *test_string = NULL;
 	char *option, buf[128];
-	int i, exit = 0;
+	int i, exit = 0, zero = 0;
 	size_t j;
 	long fixed = 0;
 
@@ -109,6 +109,10 @@ int main(int argc, char **argv)
 		else if(*option != '-' && !test_string)
 		{
 			test_string = option;
+		}
+		else if(!strcmp(option, "-z"))
+		{
+			zero = 1;
 		}
 		else if(!strcmp(option, "-q"))
 		{
@@ -228,6 +232,11 @@ mdone:
 
 	tg_domain_free(domain);
 
+	if(zero)
+	{
+		return 0;
+	}
+
 	return exit;
 }
 
@@ -240,6 +249,7 @@ static void tg_printHelp()
 	tg_printd(0, "  -ap <file>           load TextGlass attribute patch file\n");
 	tg_printd(0, "  -t <file>            load TextGlass test file\n");
 	tg_printd(0, "  -f <size>            fixed buffer size in bytes\n");
+	tg_printd(0, "  -z                   always return 0\n");
 	tg_printd(0, "  -h                   print help\n");
 	tg_printd(0, "  -q                   quiet\n");
 	tg_printd(0, "  -v                   verbose\n");
