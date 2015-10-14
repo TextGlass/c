@@ -28,8 +28,9 @@ int main()
 
   tg_printd_debug_level = 1;
 
-  domain_browser = tg_domain_load(patterns_browser, NULL, NULL, NULL);
+  //load the domains
 
+  domain_browser = tg_domain_load(patterns_browser, NULL, NULL, NULL);
   domain_os = tg_domain_load(patterns_os, NULL, NULL, NULL);
 
   if(!domain_browser || !domain_os)
@@ -40,10 +41,14 @@ int main()
 
   printf("Test string: '%s'\n", test_string);
 
+  //classify the text string
+
   result_browser = tg_classify(domain_browser, test_string);
 
   //we are storing result_os in buf
   result_os = tg_classify_fixed(domain_os, test_string, buf, sizeof(buf));
+
+  //browser results
 
   if(result_browser->error_code) //fatal error
   {
@@ -60,6 +65,8 @@ int main()
         result_browser->values[i]);
   }
 
+  //os results
+
   if(result_os->error_code) //fatal error
   {
     printf("OS error: %d\n", result_os->error_code);
@@ -74,6 +81,8 @@ int main()
     printf("OS attribute: '%s'='%s'\n", result_os->keys[i],
         tg_result_get(result_os, result_os->keys[i]));
   }
+
+  //cleanup
 
   tg_result_free(result_browser);
 
