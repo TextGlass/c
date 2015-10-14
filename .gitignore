@@ -1,5 +1,7 @@
 *.o
-src/*.so
+*.so
+vmod_*.rst
+vcc_if.*
 src/*.a
 src/textglass_client
 nbproject
