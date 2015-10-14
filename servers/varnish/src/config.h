@@ -1,1 +1,1 @@
-#define VERSION 1.0
+#undef HAVE_CONFIG_H
