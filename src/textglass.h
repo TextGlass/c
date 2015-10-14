@@ -73,13 +73,21 @@ typedef enum
 }
 tg_pattern_type;
 
+typedef enum
+{
+	TG_ERROR_NONE = 0,
+	TG_ERROR_TRANSFORM = 1,
+	TG_ERROR_MEMORY = 2
+}
+tg_error_code;
+
 
 typedef struct
 {
 	unsigned int		magic;
 #define TG_ATTRIBUTES_MAGIC	0xF45A0AC2
 
-	unsigned int		error_code;
+	tg_error_code		error_code;
 
 	const char		*pattern_id;
 
@@ -148,7 +156,7 @@ typedef struct
 	const char		*default_id;
 	tg_attributes		*default_attributes;
 
-	tg_attributes		*error_attributes;
+	tg_attributes		error_attributes[2];
 
 	tg_list			*list_slab;
 	size_t			list_slab_size;
@@ -244,6 +252,7 @@ void tg_transformer_free(tg_transformer *transformer);
 void tg_attributes_json_index(tg_domain *domain, tg_jsonfile *json_file);
 tg_attributes *tg_attributes_build(tg_domain *domain, const char *pattern_id);
 tg_attributes *tg_attributes_alloc(size_t keys);
+void tg_attributes_init(tg_attributes *attributes, size_t keys);
 void tg_attributes_free(tg_attributes *attributes);
 
 

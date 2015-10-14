@@ -35,6 +35,7 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 	size_t length, token_length;
 	size_t i, j, k, ngram_pos;
 	size_t winner_length;
+	size_t error_code = 0;
 	long rank, wrank;
 
 	assert(domain && domain->magic == TG_DOMAIN_MAGIC);
@@ -65,6 +66,7 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 			if(!input)
 			{
 				tg_printd(3, "Transformer error\n");
+				error_code = 0;
 				goto cerror;
 			}
 
@@ -195,7 +197,7 @@ tg_result *tg_classify(const tg_domain *domain, const char *original)
 cerror:
 	tg_classify_free(classify);
 
-	result = domain->error_attributes;
+	result = &domain->error_attributes[error_code];
 
 	assert(result && result->magic == TG_RESULT_MAGIC);
 	assert(result->error_code);

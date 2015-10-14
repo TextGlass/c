@@ -274,8 +274,11 @@ static tg_domain *tg_domain_init(tg_jsonfile *pattern, tg_jsonfile *attribute,
 		domain->default_attributes = tg_attributes_alloc(0);
 	}
 
-	domain->error_attributes = tg_attributes_alloc(0);
-	domain->error_attributes->error_code = 1;
+	tg_attributes_init(&domain->error_attributes[0], 0);
+	domain->error_attributes[0].error_code = TG_ERROR_TRANSFORM;
+
+	tg_attributes_init(&domain->error_attributes[1], 0);
+	domain->error_attributes[1].error_code = TG_ERROR_MEMORY;
 
 	//PATTERN INDEX
 
@@ -415,7 +418,6 @@ void tg_domain_free(tg_domain *domain)
 	free(domain->token_seperators);
 	tg_hashtable_free(domain->attribute_index);
 	tg_attributes_free(domain->default_attributes);
-	tg_attributes_free(domain->error_attributes);
 	tg_list_free(domain->input_transformers);
 
 	tg_jsonfile_free(domain->pattern);

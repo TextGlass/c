@@ -246,12 +246,19 @@ tg_attributes *tg_attributes_alloc(size_t keys)
 
 	assert(attributes);
 
+	tg_attributes_init(attributes, keys);
+
+	return attributes;
+}
+
+void tg_attributes_init(tg_attributes *attributes, size_t keys)
+{
+	assert(attributes);
+
 	attributes->magic = TG_ATTRIBUTES_MAGIC;
 	attributes->key_len = keys;
 	attributes->keys = attributes->buf;
 	attributes->values = &attributes->buf[attributes->key_len];
-
-	return attributes;
 }
 
 void tg_attributes_free(tg_attributes *attributes)
