@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-O3 -Wall -g -fPIC -I. -Idata -Ijsmn
-LDFLAGS=
+LDFLAGS=-shared
 LIBFLAGS=
 RM=rm -f
 
@@ -33,10 +33,10 @@ all:			textglass_client lib
 lib:			libtextglass.so libtextglass.a
 
 textglass_client:	libtextglass.a main.o
-			$(CC) $(LDFLAGS) -o $@ main.o libtextglass.a $(LIBFLAGS)
+			$(CC) -o $@ main.o libtextglass.a $(LIBFLAGS)
 
 libtextglass.so:	$(OBJS)
-			$(CC) $(LDFLAGS) -shared -o $@ $(OBJS)
+			$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
 libtextglass.a:		$(OBJS)
 			ar cr $@ $(OBJS)
