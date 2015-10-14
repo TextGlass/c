@@ -1,6 +1,7 @@
 #!/bin/bash
 
 BINARY="src/textglass_client"
+OPTIONS="-q"
 
 if [ "$1" = "valgrind" ]
 then
@@ -60,7 +61,7 @@ do
     AP=`find $DROOT -type f | grep attribute | grep patch | sort | sed "s/^/-ap /" | xargs echo`
     T=`find $DROOT -type f | grep test | sort | sed "s/^/-t /" | xargs echo`
 
-    CMD="`echo $VALGRIND $BINARY $P $PP $A $AP $T -q`"
+    CMD="`echo $VALGRIND $BINARY $P $PP $A $AP $T $OPTIONS`"
 
     echo "CMD: $CMD"
 

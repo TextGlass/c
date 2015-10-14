@@ -279,9 +279,13 @@ char *tg_t_replace(tg_memalloc *memalloc, tg_transformer *transformer, char *inp
 	else
 	{
 		dest_len = input_len + 1 + ((replace_with_len - find_len) * 10);
-		dest = malloc(dest_len);
+		dest = tg_memalloc_malloc(memalloc, dest_len);
 
-		assert(dest);
+		//memory error, not transformer error
+		if(!dest)
+		{
+			return NULL;
+		}
 
 		tg_memalloc_add_free(memalloc, dest);
 
@@ -296,9 +300,13 @@ char *tg_t_replace(tg_memalloc *memalloc, tg_transformer *transformer, char *inp
 
 			dest_new_len = dest_len * 2;
 
-			dest_new = malloc(dest_new_len);
+			dest_new = tg_memalloc_malloc(memalloc, dest_new_len);
 
-			assert(dest_new);
+			//memory error, not transformer error
+			if(!dest_new)
+			{
+				return NULL;
+			}
 
 			tg_memalloc_add_free(memalloc, dest_new);
 

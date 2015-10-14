@@ -20,11 +20,12 @@
 
 #include <unistd.h>
 
-static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file);
+static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file, long fixed);
 static void tg_printHelp();
 static int tg_test_attributes(tg_result *result, jsmntok_t *attributes);
 
 #define TG_MAIN_ERROR(msg) do {fprintf(stderr, "%s", msg); exit = 1; goto mdone; } while(0)
+#define TG_TEST_FIXED_LEN 10000
 
 int main(int argc, char **argv)
 {
@@ -42,6 +43,7 @@ int main(int argc, char **argv)
 	char *option, buf[128];
 	int i, exit = 0;
 	size_t j;
+	long fixed = 0;
 
 	tg_printd_debug_level = 1;
 
@@ -95,6 +97,14 @@ int main(int argc, char **argv)
 		else if(!strcmp(option, "-t") && (i + 1) < argc && *argv[i + 1] != '-')
 		{
 			tg_list_add(tests, argv[++i]);
+		}
+		else if(!strcmp(option, "-f") && (i + 1) < argc && *argv[i + 1] != '-')
+		{
+			fixed = atol(argv[++i]);
+			if(fixed <= 0 || fixed > TG_TEST_FIXED_LEN)
+			{
+				TG_MAIN_ERROR("invalid fixed buffer size\n");
+			}
 		}
 		else if(*option != '-' && !test_string)
 		{
@@ -158,7 +168,7 @@ int main(int argc, char **argv)
 
 		clock_gettime(CLOCK_REALTIME, &start);
 
-		exit += tg_test_file(domain, test_file);
+		exit += tg_test_file(domain, test_file, fixed);
 
 		clock_gettime(CLOCK_REALTIME, &end);
 		tg_time_diff(&end, &start, &diff);
@@ -229,6 +239,7 @@ static void tg_printHelp()
 	tg_printd(0, "  -pp <file>           load TextGlass pattern patch file\n");
 	tg_printd(0, "  -ap <file>           load TextGlass attribute patch file\n");
 	tg_printd(0, "  -t <file>            load TextGlass test file\n");
+	tg_printd(0, "  -f <size>            fixed buffer size in bytes\n");
 	tg_printd(0, "  -h                   print help\n");
 	tg_printd(0, "  -q                   quiet\n");
 	tg_printd(0, "  -v                   verbose\n");
@@ -236,12 +247,13 @@ static void tg_printHelp()
 	tg_printd(0, "  STRING               test string\n");
 }
 
-static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
+static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file, long fixed)
 {
 	jsmntok_t *tests, *test, *attributes;
 	tg_result *result;
 	const char *expected;
 	const char *input;
+	char buf[TG_TEST_FIXED_LEN];
 	int errors = 0;
 	long i;
 
@@ -277,7 +289,14 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 			{
 				tg_printd(2, "Test input: '%s'\n", input);
 
-				result = tg_classify(domain, input);
+				if(fixed > 0)
+				{
+					result = tg_classify_fixed(domain, input, buf, fixed);
+				}
+				else
+				{
+					result = tg_classify(domain, input);
+				}
 
 				assert(result);
 
@@ -313,7 +332,10 @@ static int tg_test_file(tg_domain *domain, tg_jsonfile *test_file)
 
 				tg_printd(2, "PASS: %s\n", result->pattern_id);
 
-				tg_result_free(result);
+				if(!fixed)
+				{
+					tg_result_free(result);
+				}
 			}
 		}
 	}

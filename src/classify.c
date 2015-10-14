@@ -178,8 +178,6 @@ tg_result *tg_classify_fixed(const tg_domain *domain, const char *original, void
 
 	tg_printd(3, "Winner: %s\n", winner ? winner->pattern_id : NULL);
 
-	tg_classify_free(classify);
-
 	if(winner)
 	{
 		assert(winner->magic == TG_PATTERN_MAGIC);
@@ -193,6 +191,14 @@ tg_result *tg_classify_fixed(const tg_domain *domain, const char *original, void
 
 		result = tg_result_alloc(domain->default_attributes, original, buf, available);
 	}
+
+	if(!result)
+	{
+		error_code = 1;
+		goto cerror;
+	}
+
+	tg_classify_free(classify);
 
 	assert(result && result->magic == TG_RESULT_MAGIC);
 	assert(!result->error_code);
@@ -264,8 +270,10 @@ static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input, 
 	{
 		result = tg_memalloc_bootstrap(buf, available, attributes ? attributes->key_len : 0);
 
-		//TODO safe fail here
-		assert(result);
+		if(!result)
+		{
+			return NULL;
+		}
 
 		assert(result->memalloc.enabled);
 	}
@@ -303,10 +311,12 @@ static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input, 
 			tg_printd(4, "Transforming: '%s'\n", input);
 
 			len = strlen(input) + 1;
-			transformed = tg_memalloc_malloc(&attributes->memalloc, len);
+			transformed = tg_memalloc_malloc(&result->memalloc, len);
 
-			//TODO safe fail here
-			assert(transformed);
+			if(!transformed)
+			{
+				return NULL;
+			}
 
 			strncpy(transformed, input, len);
 

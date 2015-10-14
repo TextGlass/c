@@ -47,6 +47,9 @@ tg_attributes *tg_memalloc_bootstrap(void *buf, size_t available, size_t keys)
 
 	if(size > available)
 	{
+		tg_printd(1, "tg_memalloc_bootstrap() out of memory, requested: %zu, available: %zu\n",
+			 size, available);
+
 		return NULL;
 	}
 
@@ -71,11 +74,18 @@ void *tg_memalloc_malloc(tg_memalloc *memalloc, size_t size)
 
 	if(!memalloc->enabled)
 	{
-		return malloc(size);
+		ret = malloc(size);
+
+		assert(ret);
+
+		return ret;
 	}
 
 	if(!size || (size + memalloc->position) > memalloc->available)
 	{
+		tg_printd(1, "tg_memalloc_malloc() out of memory, requested: %zu, available: %zu-%zu\n",
+			 size, memalloc->available, memalloc->position);
+
 		return NULL;
 	}
 
