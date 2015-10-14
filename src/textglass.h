@@ -64,7 +64,7 @@ typedef struct
 	void			*buf;
 
 	size_t			available;
-	size_t			position;
+	size_t			used;
 
 	tg_list			*free_list;
 

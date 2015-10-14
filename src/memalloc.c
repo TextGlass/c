@@ -26,7 +26,7 @@ void tg_memalloc_init(tg_memalloc *memalloc, void *buf, size_t available)
 
 	memalloc->buf = buf;
 	memalloc->available = available;
-	memalloc->position = 0;
+	memalloc->used = 0;
 	memalloc->enabled = 0;
 	memalloc->free_list = NULL;
 
@@ -59,9 +59,9 @@ tg_attributes *tg_memalloc_bootstrap(void *buf, size_t available, size_t keys)
 
 	tg_memalloc_init(&attributes->memalloc, buf, available);
 
-	attributes->memalloc.position += size;
+	attributes->memalloc.used += size;
 
-	assert(attributes->memalloc.available >= attributes->memalloc.position);
+	assert(attributes->memalloc.available >= attributes->memalloc.used);
 
 	return attributes;
 }
@@ -81,17 +81,17 @@ void *tg_memalloc_malloc(tg_memalloc *memalloc, size_t size)
 		return ret;
 	}
 
-	if(!size || (size + memalloc->position) > memalloc->available)
+	if(!size || (size + memalloc->used) > memalloc->available)
 	{
 		tg_printd(1, "tg_memalloc_malloc() out of memory, requested: %zu, available: %zu-%zu\n",
-			 size, memalloc->available, memalloc->position);
+			 size, memalloc->available, memalloc->used);
 
 		return NULL;
 	}
 
-	ret = memalloc->buf + memalloc->position;
+	ret = memalloc->buf + memalloc->used;
 
-	memalloc->position += size;
+	memalloc->used += size;
 
 	return ret;
 }
