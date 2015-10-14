@@ -21,7 +21,10 @@
 
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef _TEXTGLASS_SKIP_ASSERT
 #include <assert.h>
+#endif
 
 #include "tree.h"
 

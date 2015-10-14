@@ -23,10 +23,13 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <time.h>
 #include <ctype.h>
+
+#ifndef _TEXTGLASS_SKIP_ASSERT
+#include <assert.h>
+#endif
 
 #include "list.h"
 #include "hashtable.h"

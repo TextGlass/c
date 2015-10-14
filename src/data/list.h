@@ -20,8 +20,11 @@
 #define _TG_LIST_H_INCLUDED_
 
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
+
+#ifndef _TEXTGLASS_SKIP_ASSERT
+#include <assert.h>
+#endif
 
 #include "queue.h"
 
