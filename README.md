@@ -87,6 +87,7 @@ int main()
   tg_result_free(result_browser);
 
   //we do not need to free result_os since it was stored in stack memory
+  printf("OS bytes used: %zu\n", result_os->memalloc.used);
 
   tg_domain_free(domain_browser);
   tg_domain_free(domain_os);
@@ -120,5 +121,6 @@ OS attribute: 'ntversion'='6.0'
 OS attribute: 'version'='Vista'
 OS attribute: 'name'='Windows'
 OS attribute: 'vendor'='Microsoft'
+OS bytes used: 0
 ```
 
