@@ -202,6 +202,7 @@ tg_result *tg_classify_fixed(const tg_domain *domain, const char *original, void
 
 	assert(result && result->magic == TG_RESULT_MAGIC);
 	assert(!result->error_code);
+	assert(!(result->memalloc.enabled && result->user_malloc));
 
 	tg_printd(3, "Fixed memory used: %zu\n", result->memalloc.used);
 
