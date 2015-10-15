@@ -299,6 +299,7 @@ static tg_result *tg_result_alloc(tg_attributes *attributes, const char *input, 
 
 		if(attributes->transformers->size && !result->memalloc.enabled)
 		{
+			assert(result->user_malloc);
 			result->memalloc.free_list = tg_list_alloc(attributes->transformers->size * 3, (TG_FREE)free);
 		}
 
