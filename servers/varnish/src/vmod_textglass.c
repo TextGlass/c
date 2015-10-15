@@ -31,22 +31,22 @@ vtg_result_container;
 
 void vtg_dcontainer_free(void *data)
 {
-	vtg_domain_container *container;
+	vtg_domain_container *dcontainer;
 	size_t name;
 
-	CAST_OBJ_NOTNULL(container, data, VTG_DCONTAINER_MAGIC);
+	CAST_OBJ_NOTNULL(dcontainer, data, VTG_DCONTAINER_MAGIC);
 
 	for(name = 0; name < VTG_MAX_NAMES; name++)
 	{
-		if(container->domains[name])
+		if(dcontainer->domains[name])
 		{
-			tg_domain_free(container->domains[name]);
+			tg_domain_free(dcontainer->domains[name]);
 
-			container->domains[name] = NULL;
+			dcontainer->domains[name] = NULL;
 		}
 	}
 
-	FREE_OBJ(container);
+	FREE_OBJ(dcontainer);
 }
 
 int init_function(const struct vrt_ctx *ctx, struct vmod_priv *priv_vcl, enum vcl_event_e e)
