@@ -31,9 +31,9 @@
 #include <assert.h>
 #endif
 
-#include "list.h"
-#include "hashtable.h"
-#include "jsmn.h"
+#include "data/list.h"
+#include "data/hashtable.h"
+#include "jsmn/jsmn.h"
 
 
 #define TEXTGLASS_VERSION	"1.0.0-beta"

@@ -97,7 +97,7 @@ int main()
 ```
 
 ```
-> gcc -o client client.c ../c/src/libtextglass.a -I../c/src/ -I../c/src/data -I../c/src/jsmn
+> gcc -o client client.c ../c/src/libtextglass.a -I../c/src/
 > ./client
 TextGlass C Client 1.0.0-beta
   Pattern file: ../browser/domain/patterns.json
