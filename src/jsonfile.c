@@ -24,7 +24,7 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 	FILE *f;
 	size_t bytes;
 	jsmn_parser parser;
-	jsmntok_t *token, *parent;
+	jsmntok_t *token;
 	long i;
 
 	assert(file);
@@ -101,16 +101,6 @@ tg_jsonfile *tg_jsonfile_get(const char *file)
 
 		token->str = jsonfile->json + token->start;
 		jsonfile->json[token->end] = '\0';
-
-		token->skip = 1;
-
-		parent = token;
-
-		while(parent->parent >= 0)
-		{
-			parent = &jsonfile->tokens[parent->parent];
-			parent->skip++;
-		}
 	}
 
 	token = tg_json_get(jsonfile->tokens, "TextGlassSpecVersion");
