@@ -29,6 +29,8 @@
 
 #ifndef _TEXTGLASS_SKIP_ASSERT
 #include <assert.h>
+#else
+#define assert(e)
 #endif
 
 #include "data/list.h"
