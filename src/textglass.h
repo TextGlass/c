@@ -281,7 +281,7 @@ void tg_memalloc_add_free(tg_memalloc *memalloc, void *ptr);
 void tg_attributes_json_index(tg_domain *domain, tg_jsonfile *json_file);
 tg_attributes *tg_attributes_build(tg_domain *domain, const char *pattern_id);
 tg_attributes *tg_attributes_alloc(size_t keys);
-inline size_t tg_attributes_size(size_t keys);
+size_t tg_attributes_size(size_t keys);
 void tg_attributes_init(tg_attributes *attributes, size_t keys);
 void tg_attributes_free(tg_attributes *attributes);
 

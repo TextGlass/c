@@ -238,7 +238,7 @@ aerror:
 	return NULL;
 }
 
-inline size_t tg_attributes_size(size_t keys)
+size_t tg_attributes_size(size_t keys)
 {
 	return sizeof(tg_attributes) + (sizeof(char*) * keys * 2);
 }
